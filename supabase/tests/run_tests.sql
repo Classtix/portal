@@ -26,8 +26,8 @@ insert into profiles (id, name, email, role, status) values ('00000000-0000-0000
 -- as admin: set up a second district and users
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select pg_temp.ok(is_admin(), 'admin recognised');
-select create_district('Mesa Unified', 'az', 316, null, null, 'office@mesa.example') as mesa \gset
-select pg_temp.ok((select monthly from districts where id = :'mesa') = 300, '316 students -> 300 monthly points');
+select create_district('Mesa Unified', 'az', 300, null, null, 'office@mesa.example') as mesa \gset
+select pg_temp.ok((select monthly from districts where id = :'mesa') = 300, '300 students -> 300 monthly points');
 select id as tempe from districts where name = 'Tempe Union HSD' \gset
 select admin_set_profile('00000000-0000-0000-0000-00000000000b', 'Maria', 'maria@tempe.example', 'district', :'tempe', 'Invited');
 select admin_set_profile('00000000-0000-0000-0000-00000000000c', 'Ollie', 'other@mesa.example', 'district', :'mesa', 'Invited');
@@ -107,7 +107,7 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select submit_request((select id from ticket_types where event_id = :'gc'), 1, '') as code4 \gset
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select update_district(:'tempe', null, 5000, null, null, null);
-select pg_temp.ok((select monthly from districts where id = :'tempe') = 4750, '5,000 students -> 4,750 monthly points');
+select pg_temp.ok((select monthly from districts where id = :'tempe') = 5000, '5,000 students -> 5,000 monthly points');
 select pg_temp.fails('select run_monthly_reset()', 'hasn''t started', 'cannot start next month early');
 reset role;
 update settings set current_month = to_char((az_today() - interval '1 month'), 'YYYY-MM');
@@ -116,7 +116,7 @@ select cron_tick() as tick \gset
 \echo :tick
 select pg_temp.ok((select current_month from settings) = az_month(), 'cron caught up to this month');
 select pg_temp.ok(available('00000000-0000-0000-0000-000000000000'::uuid) = 0, 'service role can read balances');
-select pg_temp.ok(available(:'tempe') = 4750, 'unused expired, new allocation credited');
+select pg_temp.ok(available(:'tempe') = 5000, 'unused expired, new allocation credited');
 select pg_temp.ok(held(:'tempe') = 25, 'pending hold survives the reset');
 select pg_temp.ok((select tier from districts where id = :'tempe') = 't2' and (select next_tier from districts where id = :'tempe') is null, 'single $2 rate kept');
 select pg_temp.ok((select count(*) from outbox where kind = 'reset') = 2, 'reset email per district');
@@ -128,7 +128,7 @@ select pg_temp.ok((:'tick2'::jsonb->>'retail_drops_added')::int = 0, 'cron is id
 -- reject after reset returns points to the new month
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select reject_request((select id from requests where code = :'code4'), 'Other');
-select pg_temp.ok(available(:'tempe') = 4750 + 25, 'hold released into the new month');
+select pg_temp.ok(available(:'tempe') = 5000 + 25, 'hold released into the new month');
 
 -- deactivate district
 select set_district_status(:'mesa', 'Inactive');

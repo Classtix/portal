@@ -24,13 +24,13 @@ export default async function AdminDistricts({ searchParams }: { searchParams: {
   const d = all.find((x) => x.id === searchParams.id) || list[0] || null;
   return (
     <>
-      <Head eyebrow="ClassTix Admin" title="Districts" sub="Every district is funded at $2 per student. Monthly points = students × 0.95, rounded to the nearest 10, credited on the 1st."
+      <Head eyebrow="ClassTix Admin" title="Districts" sub="Every district is funded at $2 per student: 1 point ($2 of rewards) per student, credited on the 1st."
         right={<Pop label="New district" className="btn">
           <ActionForm action={createDistrict} submit="Add district" pendingLabel="Adding…">
             <div className="form">
               <div className="f full"><label htmlFor="nd-name">District name</label><input id="nd-name" name="name" type="text" maxLength={80} required /></div>
               <div className="f"><label htmlFor="nd-state">State</label><input id="nd-state" name="state" type="text" maxLength={2} defaultValue="AZ" /></div>
-              <div className="f"><label htmlFor="nd-st">Students</label><input id="nd-st" name="students" type="number" min={1} required /><span className="hint">Sets the monthly points: 0.95 per student.</span></div>
+              <div className="f"><label htmlFor="nd-st">Students</label><input id="nd-st" name="students" type="number" min={1} required /><span className="hint">Sets the monthly points: 1 per student.</span></div>
               <div className="f full"><label htmlFor="nd-c">Contact email</label><input id="nd-c" name="contact" type="email" maxLength={120} /></div>
             </div>
           </ActionForm>
@@ -74,7 +74,7 @@ async function Detail({ d, avail, held }: { d: District; avail: number; held: nu
             <div className="f full"><label htmlFor="dn">Name</label><input id="dn" name="name" type="text" defaultValue={d.name} maxLength={80} /></div>
             <div className="f"><label htmlFor="ds">Students</label><input id="ds" name="students" type="number" min={0} defaultValue={d.students} /></div>
             <div className="f"><label htmlFor="dc">Contact email</label><input id="dc" name="contact" type="email" defaultValue={d.contact} /></div>
-            <div className="f full"><span className="lab">Monthly points</span><b className="num" style={{ fontSize: 18 }}>{pts(d.monthly)}</b><span className="hint">{num(d.students)} students × $2 = ${num(d.students * 2)}; 95% becomes points. Change the student count to update it; the new amount applies at the next reset.</span></div>
+            <div className="f full"><span className="lab">Monthly points</span><b className="num" style={{ fontSize: 18 }}>{pts(d.monthly)}</b><span className="hint">{num(d.students)} students × $2 = ${num(d.students * 2)} in rewards, at $2 per point. Change the student count to update it; the new amount applies at the next reset.</span></div>
           </div>
         </ActionForm>
         <div className="row" style={{ marginTop: 14, alignItems: "flex-start" }}>
