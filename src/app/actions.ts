@@ -168,7 +168,7 @@ export async function createDistrict(_: ActionState, fd: FormData): Promise<Acti
   const res = await guard(async () => {
     id = await rpc("create_district", {
       p_name: s(fd, "name"), p_state: s(fd, "state"), p_students: n(fd, "students") ?? 0,
-      p_tier: s(fd, "tier") || "t1", p_monthly: n(fd, "monthly"), p_contact: s(fd, "contact"),
+      p_tier: "t2", p_monthly: null, p_contact: s(fd, "contact"),
     });
     return "District added.";
   });
@@ -179,9 +179,9 @@ export async function updateDistrict(_: ActionState, fd: FormData) {
   return guard(async () => {
     await rpc("update_district", {
       p_id: s(fd, "id"), p_name: s(fd, "name"), p_students: n(fd, "students"), p_contact: s(fd, "contact"),
-      p_monthly: n(fd, "monthly"), p_tier: s(fd, "tier"),
+      p_monthly: null, p_tier: "t2",
     });
-    return "Saved. Monthly points and tier changes apply at the next reset.";
+    return "Saved. The new monthly points apply at the next reset.";
   });
 }
 export async function adjustPoints(_: ActionState, fd: FormData) {

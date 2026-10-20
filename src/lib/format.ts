@@ -3,7 +3,9 @@ import type { EventRow, TicketType } from "./types";
 export const CATS: Record<string, string> = {
   sports: "Sports", arts: "Arts & culture", music: "Music", dining: "Dining", retail: "Retail gift cards", other: "Other",
 };
-export const TIERS: Record<string, string> = { t1: "$1 / student", t2: "$2 / student", sub: "Subsidized" };
+export const RATE_LABEL = "$2 per student";
+/** Monthly points for a district: $2 per student, 95% of it as points at $2 each, rounded to the nearest 10. */
+export const monthlyFor = (students: number) => Math.round((students * 0.95) / 10) * 10;
 export const REJECT_REASONS = ["Not enough tickets left", "Request exceeds a fair share for this event", "Request deadline passed"];
 
 const TZ = "America/Phoenix";

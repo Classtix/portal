@@ -5,12 +5,12 @@ import ActionForm from "@/components/ActionForm";
 import Pop from "@/components/Pop";
 import LedgerTable from "@/components/LedgerTable";
 import { createDistrict, updateDistrict, adjustPoints, setDistrictStatus } from "@/app/actions";
-import { num, pts, TIERS } from "@/lib/format";
+import { num, pts } from "@/lib/format";
 import type { District, LedgerRow, Profile, RequestRow } from "@/lib/types";
 
 export const metadata = { title: "Districts" };
 
-export default async function AdminDistricts({ searchParams }: { searchParams: { id?: string; tier?: string; status?: string } }) {
+export default async function AdminDistricts({ searchParams }: { searchParams: { id?: string; status?: string } }) {
   const { supabase } = await requireAdmin();
   const [{ data: districts }, { data: ledger }, { data: pending }] = await Promise.all([
     supabase.from("districts").select("*").order("name"),
@@ -20,35 +20,31 @@ export default async function AdminDistricts({ searchParams }: { searchParams: {
   const all = (districts || []) as District[];
   const avail = (id: string) => (ledger || []).filter((l) => l.district_id === id).reduce((s, l) => s + l.amount, 0);
   const held = (id: string) => (pending || []).filter((r) => r.district_id === id).reduce((s, r) => s + r.qty * r.points_each, 0);
-  const list = all.filter((d) => (!searchParams.tier || d.tier === searchParams.tier) && (!searchParams.status || d.status === searchParams.status));
+  const list = all.filter((d) => (!searchParams.status || d.status === searchParams.status));
   const d = all.find((x) => x.id === searchParams.id) || list[0] || null;
   return (
     <>
-      <Head eyebrow="ClassTix Admin" title="Districts" sub="Each district gets its monthly points at every reset. Tier changes apply at the next reset."
+      <Head eyebrow="ClassTix Admin" title="Districts" sub="Every district is funded at $2 per student. Monthly points = students × 0.95, rounded to the nearest 10, credited on the 1st."
         right={<Pop label="New district" className="btn">
           <ActionForm action={createDistrict} submit="Add district" pendingLabel="Adding…">
             <div className="form">
               <div className="f full"><label htmlFor="nd-name">District name</label><input id="nd-name" name="name" type="text" maxLength={80} required /></div>
               <div className="f"><label htmlFor="nd-state">State</label><input id="nd-state" name="state" type="text" maxLength={2} defaultValue="AZ" /></div>
-              <div className="f"><label htmlFor="nd-st">Students</label><input id="nd-st" name="students" type="number" min={0} /></div>
-              <div className="f"><label htmlFor="nd-tier">Tier</label><select id="nd-tier" name="tier">{Object.entries(TIERS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-              <div className="f"><label htmlFor="nd-m">Monthly points</label><input id="nd-m" name="monthly" type="number" min={0} step={10} required /><span className="hint">Credited now, then at each reset.</span></div>
+              <div className="f"><label htmlFor="nd-st">Students</label><input id="nd-st" name="students" type="number" min={1} required /><span className="hint">Sets the monthly points: 0.95 per student.</span></div>
               <div className="f full"><label htmlFor="nd-c">Contact email</label><input id="nd-c" name="contact" type="email" maxLength={120} /></div>
             </div>
           </ActionForm>
         </Pop>} />
       <form className="row" action="/admin/districts">
-        <select className="sel" name="tier" defaultValue={searchParams.tier || ""} aria-label="Tier"><option value="">All tiers</option>{Object.entries(TIERS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         <select className="sel" name="status" defaultValue={searchParams.status || ""} aria-label="Status"><option value="">Any status</option><option>Active</option><option>Inactive</option></select>
         <button className="btn sec sm" type="submit">Filter</button>
       </form>
       <section className="panel">
         {list.length ? <div className="tbl-wrap"><table>
-          <thead><tr><th>District</th><th>Tier</th><th className="n">Students</th><th className="n">Monthly</th><th className="n">Available</th><th className="n">On hold</th><th>Status</th></tr></thead>
+          <thead><tr><th>District</th><th className="n">Students</th><th className="n">Monthly</th><th className="n">Available</th><th className="n">On hold</th><th>Status</th></tr></thead>
           <tbody>{list.map((x) => (
             <tr key={x.id} className={x.id === d?.id ? "on" : ""}>
               <td><Link href={`/admin/districts?id=${x.id}`}><b>{x.name}</b></Link><div className="sub">{x.state}</div></td>
-              <td>{TIERS[x.tier]}{x.next_tier && <div className="sub">→ {TIERS[x.next_tier]} next reset</div>}</td>
               <td className="n">{num(x.students)}</td><td className="n">{pts(x.monthly)}</td>
               <td className="n">{pts(avail(x.id))}</td><td className="n">{pts(held(x.id))}</td><td><Pill s={x.status} /></td>
             </tr>))}</tbody></table></div>
@@ -78,9 +74,7 @@ async function Detail({ d, avail, held }: { d: District; avail: number; held: nu
             <div className="f full"><label htmlFor="dn">Name</label><input id="dn" name="name" type="text" defaultValue={d.name} maxLength={80} /></div>
             <div className="f"><label htmlFor="ds">Students</label><input id="ds" name="students" type="number" min={0} defaultValue={d.students} /></div>
             <div className="f"><label htmlFor="dc">Contact email</label><input id="dc" name="contact" type="email" defaultValue={d.contact} /></div>
-            <div className="f"><label htmlFor="dt">Tier</label><select id="dt" name="tier" defaultValue={d.next_tier || d.tier}>{Object.entries(TIERS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-              <span className="hint">{d.next_tier ? `Changes from ${TIERS[d.tier]} at the next reset.` : d.tier === "sub" ? "Subsidized: ClassTix sets the monthly points by hand." : "Changes apply at the next reset."}</span></div>
-            <div className="f"><label htmlFor="dm">Monthly points</label><input id="dm" name="monthly" type="number" min={0} step={10} defaultValue={d.monthly} /><span className="hint">Credited at each reset.</span></div>
+            <div className="f full"><span className="lab">Monthly points</span><b className="num" style={{ fontSize: 18 }}>{pts(d.monthly)}</b><span className="hint">{num(d.students)} students × $2 = ${num(d.students * 2)}; 95% becomes points. Change the student count to update it; the new amount applies at the next reset.</span></div>
           </div>
         </ActionForm>
         <div className="row" style={{ marginTop: 14, alignItems: "flex-start" }}>

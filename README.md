@@ -42,6 +42,7 @@ You'll create three free accounts and add three DNS records. Do the steps in ord
    1. `0001_schema.sql`
    2. `0002_functions.sql`
    3. `0003_seed.sql`, which loads your 26-listing catalog, Tempe Union HSD and the retail gift card program.
+   4. `0004_single_rate.sql`, which sets the single $2-per-student rate.
 3. Go to **Authentication → Sign In / Providers → Email**:
    - Turn **off** "Allow new users to sign up". Accounts are invite-only.
    - Leave "Confirm email" on.
@@ -102,13 +103,16 @@ You'll create three free accounts and add three DNS records. Do the steps in ord
 
 ---
 
+## How points are funded
+
+Every district is funded at **$2 per student per month**. 95% of that becomes points at $2 each, so monthly points = students × 0.95, rounded to the nearest 10 (4,500 students → 4,280 points). Editing a district's student count updates its monthly points; the new amount is credited at the next reset.
+
 ## How the monthly cycle runs
 
 Every night at about 12:15 AM Arizona time, Vercel calls `/api/cron`. That job does three things:
 
 1. **On the 1st, it starts the new month:**
    - Unused points expire, or roll over if you switch that on in Program settings.
-   - Pending tier changes take effect.
    - Each district is credited its monthly points.
    - District Admins are emailed their new balance.
    - Pending requests keep their held points. If one is rejected later, the points return to the new month.

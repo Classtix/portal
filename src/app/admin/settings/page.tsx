@@ -31,7 +31,7 @@ export default async function ProgramSettings() {
             <dt>Next allocation</dt><dd>{pts(act.reduce((a, d) => a + d.monthly, 0))} across {num(act.length)} active district{act.length === 1 ? "" : "s"}</dd>
             <dt>Unused points</dt><dd>{st.rollover ? "Roll over to next month" : "Expire at reset"}</dd>
           </dl>
-          <p className="sub" style={{ margin: "14px 0" }}>On the 1st, unused points expire (or roll over), tier changes apply, each district is credited and its admins are emailed. Pending requests keep their held points; if one is rejected later, the points return to the new month.</p>
+          <p className="sub" style={{ margin: "14px 0" }}>On the 1st, unused points expire (or roll over), each district is credited and its admins are emailed. Pending requests keep their held points; if one is rejected later, the points return to the new month.</p>
           {due && <ActionForm action={runResetNow} submit={`Start ${mLabel(mNext(st.current_month))} now`} pendingLabel="Running…" />}
         </section>
         <section className="panel">
