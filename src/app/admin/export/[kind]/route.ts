@@ -17,11 +17,11 @@ export async function GET(_: Request, { params }: { params: { kind: string } }) 
   let rows: unknown[][];
   if (params.kind === "requests") {
     const { data } = await supabase.from("requests").select("*").order("created_at");
-    rows = [["Code", "District", "Listing", "Event date", "Type", "Requested", "Approved", "Points each", "Points used", "Status", "Reason", "District note", "Submitted", "Decided", "Fulfilled"]];
+    rows = [["Code", "District", "Listing", "Event date", "Type", "Requested", "Approved", "Points each", "Points used", "Status", "Reason", "School", "Merit type", "Submitted", "Decided", "Fulfilled"]];
     (data || []).forEach((r) => {
       const e = ev.get(r.event_id); const t = e?.ticket_types.find((x: { id: string }) => x.id === r.type_id);
       const live = r.status === "Approved" || r.status === "Fulfilled";
-      rows.push([r.code, dn.get(r.district_id), e?.title, e?.date, t?.name, r.qty, live ? r.approved_qty : 0, r.points_each, live ? r.approved_qty * r.points_each : 0, r.status, r.reason, r.note, r.created_at, r.decided_at, r.fulfilled_at]);
+      rows.push([r.code, dn.get(r.district_id), e?.title, e?.date, t?.name, r.qty, live ? r.approved_qty : 0, r.points_each, live ? r.approved_qty * r.points_each : 0, r.status, r.reason, r.school, r.merit || r.note, r.created_at, r.decided_at, r.fulfilled_at]);
     });
   } else if (params.kind === "ledger") {
     const { data } = await supabase.from("ledger").select("*").order("at").order("id");

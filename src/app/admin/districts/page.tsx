@@ -32,6 +32,7 @@ export default async function AdminDistricts({ searchParams }: { searchParams: {
               <div className="f"><label htmlFor="nd-state">State</label><input id="nd-state" name="state" type="text" maxLength={2} defaultValue="AZ" /></div>
               <div className="f"><label htmlFor="nd-st">Students</label><input id="nd-st" name="students" type="number" min={1} required /><span className="hint">Sets the monthly points: 1 per student.</span></div>
               <div className="f full"><label htmlFor="nd-c">Contact email</label><input id="nd-c" name="contact" type="email" maxLength={120} /></div>
+              <div className="f full"><label htmlFor="nd-sch">Schools <span className="sub">(one per line)</span></label><textarea id="nd-sch" name="schools" rows={5} /></div>
             </div>
           </ActionForm>
         </Pop>} />
@@ -44,7 +45,7 @@ export default async function AdminDistricts({ searchParams }: { searchParams: {
           <thead><tr><th>District</th><th className="n">Students</th><th className="n">Monthly</th><th className="n">Available</th><th className="n">On hold</th><th>Status</th></tr></thead>
           <tbody>{list.map((x) => (
             <tr key={x.id} className={x.id === d?.id ? "on" : ""}>
-              <td><Link href={`/admin/districts?id=${x.id}`}><b>{x.name}</b></Link><div className="sub">{x.state}</div></td>
+              <td><Link href={`/admin/districts?id=${x.id}`}><b>{x.name}</b></Link><div className="sub">{x.state} · {(x.schools || []).length} schools</div></td>
               <td className="n">{num(x.students)}</td><td className="n">{pts(x.monthly)}</td>
               <td className="n">{pts(avail(x.id))}</td><td className="n">{pts(held(x.id))}</td><td><Pill s={x.status} /></td>
             </tr>))}</tbody></table></div>
@@ -74,6 +75,9 @@ async function Detail({ d, avail, held }: { d: District; avail: number; held: nu
             <div className="f full"><label htmlFor="dn">Name</label><input id="dn" name="name" type="text" defaultValue={d.name} maxLength={80} /></div>
             <div className="f"><label htmlFor="ds">Students</label><input id="ds" name="students" type="number" min={0} defaultValue={d.students} /></div>
             <div className="f"><label htmlFor="dc">Contact email</label><input id="dc" name="contact" type="email" defaultValue={d.contact} /></div>
+            <div className="f full"><label htmlFor="dsch">Schools <span className="sub">(one per line)</span></label>
+              <textarea id="dsch" name="schools" rows={Math.max(4, (d.schools || []).length + 1)} defaultValue={(d.schools || []).join("\n")} placeholder={"Tempe High School\nMcClintock High School"} />
+              <span className="hint">Districts pick from this list when they say which school a reward was earned at.</span></div>
             <div className="f full"><span className="lab">Monthly points</span><b className="num" style={{ fontSize: 18 }}>{pts(d.monthly)}</b><span className="hint">{num(d.students)} students × $2 = ${num(d.students * 2)} in rewards, at $2 per point. Change the student count to update it; the new amount applies at the next reset.</span></div>
           </div>
         </ActionForm>

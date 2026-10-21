@@ -38,7 +38,7 @@ export default async function DistrictEvent({ params }: { params: { id: string }
         <section className="panel">
           <h2>Request {unit}</h2>
           {s !== "Open" ? <p className="banner">{s === "Sold out" ? "This listing is sold out." : s === "Closed" ? "The request deadline has passed." : "This listing isn't open for requests."}</p>
-            : <RequestForm types={e.ticket_types} available={available} max={e.max_per_request} unit={unit} />}
+            : <RequestForm types={e.ticket_types} available={available} max={e.max_per_request} unit={unit} schools={district.schools || []} />}
         </section>
       </div>
     </>

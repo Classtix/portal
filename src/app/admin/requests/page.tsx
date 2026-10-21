@@ -110,7 +110,7 @@ async function Detail({ r, e, d, back }: { r: RequestRow; e: EventRow | null; d:
         {r.decided_at && <><dt>Decided</dt><dd>{fDT(r.decided_at)}</dd></>}
         {r.fulfilled_at && <><dt>Fulfilled</dt><dd>{fDT(r.fulfilled_at)}</dd></>}
         {r.reason && <><dt>Reason</dt><dd>{r.reason}</dd></>}
-        <dt>District note</dt><dd>{r.note || <span className="sub">No note</span>}</dd>
+        <dt>Merit awarded for</dt><dd>{r.merit ? <>{r.merit}<div className="sub">{r.school}</div></> : r.note || <span className="sub">Not given</span>}</dd>
       </dl>
       {over && <p className="note">Only {num(left)} left. Approve part of this request or reject it.</p>}
       {r.status === "Pending" && (

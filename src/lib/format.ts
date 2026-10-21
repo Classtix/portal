@@ -51,3 +51,15 @@ export function evState(e: EventRow): "Open" | "Closed" | "Sold out" | EventRow[
   return "Open";
 }
 export const sortTypes = (e: EventRow) => ({ ...e, ticket_types: [...(e.ticket_types || [])].sort((a, b) => a.sort - b.sort) });
+
+/** What a district can award a reward for. Keep in step with merit_types() in the database. */
+export const MERIT_TYPES = ["Attendance", "Grades", "ACT", "FAFSA", "Superintendent", "Principal"];
+
+/** Request amounts: multiples of 2 up to what's left (and the listing's per-request cap); an odd remainder can be taken whole. */
+export function qtyOptions(left: number, max: number | null): number[] {
+  const cap = Math.min(left, max || left);
+  const out: number[] = [];
+  for (let i = 2; i <= cap; i += 2) out.push(i);
+  if (cap === left && left % 2 === 1) out.push(left);
+  return out;
+}

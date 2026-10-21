@@ -5,7 +5,7 @@ export type Profile = {
 };
 export type District = {
   id: string; name: string; state: string; students: number; tier: "t1" | "t2" | "sub";
-  next_tier: "t1" | "t2" | "sub" | null; monthly: number; contact: string; status: "Active" | "Inactive"; created_at: string;
+  next_tier: "t1" | "t2" | "sub" | null; monthly: number; contact: string; status: "Active" | "Inactive"; created_at: string; schools: string[];
 };
 export type TicketType = { id: string; event_id: string; name: string; qty: number; points: number; seats: number; approved: number; sort: number };
 export type EventRow = {
@@ -17,7 +17,7 @@ export type EventRow = {
 export type RequestStatus = "Pending" | "Approved" | "Rejected" | "Fulfilled" | "Cancelled";
 export type RequestRow = {
   id: string; code: string; district_id: string; event_id: string; type_id: string; qty: number; points_each: number;
-  approved_qty: number; status: RequestStatus; note: string; reason: string; created_at: string;
+  approved_qty: number; status: RequestStatus; note: string; school: string; merit: string; reason: string; created_at: string;
   decided_at: string | null; fulfilled_at: string | null;
 };
 export type LedgerRow = { id: number; district_id: string; at: string; entry: string; amount: number; ref: string };

@@ -42,7 +42,7 @@ select id as ty from ticket_types where event_id = :'ev' \gset
 
 -- invited user can't act until they sign in
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 2, '')$$, 'linked to an active district', 'invited user blocked');
+select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 2, 'Tempe High School', 'Attendance')$$, 'linked to an active district', 'invited user blocked');
 select touch_login();
 select pg_temp.ok((select status from profiles where id = auth.uid()) = 'Active', 'first sign-in activates');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c'); select touch_login();
@@ -51,16 +51,20 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000c'); select touch_log
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select pg_temp.ok((select count(*) from districts) = 1, 'district sees only its own district');
 select pg_temp.ok(available(:'mesa') is null, 'district cannot read another balance');
-select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 9, '')$$, 'most you can request', 'per-request max enforced');
+select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 10, 'Tempe High School', 'Attendance')$$, 'most you can request', 'per-request max enforced');
+select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 3, 'Tempe High School', 'Attendance')$$, 'multiples of 2', 'odd amounts refused');
+select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 2, 'Lincoln Elementary', 'Attendance')$$, 'district''s schools', 'school must be on the district list');
+select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 2, 'Tempe High School', 'Sports')$$, 'merit type', 'merit type must be on the list');
 select pg_temp.fails($$select approve_request(gen_random_uuid())$$, 'Only ClassTix admins', 'district cannot approve');
-select submit_request(:'ty', 6, 'Attendance winners, Lincoln') as code1 \gset
+select submit_request(:'ty', 6, 'Tempe High School', 'Attendance') as code1 \gset
+select pg_temp.ok((select note = 'Tempe High School · Attendance' and school = 'Tempe High School' and merit = 'Attendance' from requests where code = :'code1'), 'merit fields stored');
 select pg_temp.ok(available(:'tempe') = 4280 - 240 and held(:'tempe') = 240, 'points held on submit');
 select pg_temp.ok((select count(*) from outbox where kind = 'new') = 0, 'district cannot read outbox');
 
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 select pg_temp.ok((select count(*) from requests) = 0, 'other district cannot see Tempe requests');
-select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 8, '')$$, 'have', 'cannot overspend (300 pts < 320)');
-select submit_request(:'ty', 7, '') as code2 \gset
+select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 8, 'District-wide', 'Grades')$$, 'have', 'cannot overspend (300 pts < 320)');
+select submit_request(:'ty', 6, 'District-wide', 'Superintendent') as code2 \gset
 select pg_temp.fails($$select cancel_request((select id from requests where code = '$$ || :'code1' || $$'))$$, 'not found', 'cannot touch another district''s request');
 
 -- admin decisions
@@ -95,7 +99,7 @@ select pg_temp.ok((select approved from ticket_types where id = :'ty') = 6, 'inv
 select save_event(jsonb_build_object('title','Gift card','cat','retail','dated',false,
   'types', jsonb_build_array(jsonb_build_object('name','Target $50','qty',3,'points',25)))) as gc \gset
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-select submit_request((select id from ticket_types where event_id = :'gc'), 2, '') as code3 \gset
+select submit_request((select id from ticket_types where event_id = :'gc'), 2, 'Desert Vista High School', 'FAFSA') as code3 \gset
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select pg_temp.fails($$select reject_request((select id from requests where code = '$$ || :'code3' || $$'), ' ')$$, 'reason', 'reject needs a reason');
 select reject_request((select id from requests where code = :'code3'), 'Not enough tickets left');
@@ -104,7 +108,7 @@ select pg_temp.ok(available(:'tempe') = 4280 - 240 - 40, 'reject releases, adjus
 
 -- monthly reset: holds survive, unused expire, tier change applies
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-select submit_request((select id from ticket_types where event_id = :'gc'), 1, '') as code4 \gset
+select submit_request((select id from ticket_types where event_id = :'gc'), 2, 'McClintock High School', 'Grades') as code4 \gset
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select update_district(:'tempe', null, 5000, null, null, null);
 select pg_temp.ok((select monthly from districts where id = :'tempe') = 5000, '5,000 students -> 5,000 monthly points');
@@ -117,7 +121,7 @@ select cron_tick() as tick \gset
 select pg_temp.ok((select current_month from settings) = az_month(), 'cron caught up to this month');
 select pg_temp.ok(available('00000000-0000-0000-0000-000000000000'::uuid) = 0, 'service role can read balances');
 select pg_temp.ok(available(:'tempe') = 5000, 'unused expired, new allocation credited');
-select pg_temp.ok(held(:'tempe') = 25, 'pending hold survives the reset');
+select pg_temp.ok(held(:'tempe') = 50, 'pending hold survives the reset');
 select pg_temp.ok((select tier from districts where id = :'tempe') = 't2' and (select next_tier from districts where id = :'tempe') is null, 'single $2 rate kept');
 select pg_temp.ok((select count(*) from outbox where kind = 'reset') = 2, 'reset email per district');
 select pg_temp.ok((select count(*) from events where series = 'retail' and date >= az_today()) >= 2, 'retail drops scheduled');
@@ -128,7 +132,7 @@ select pg_temp.ok((:'tick2'::jsonb->>'retail_drops_added')::int = 0, 'cron is id
 -- reject after reset returns points to the new month
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select reject_request((select id from requests where code = :'code4'), 'Other');
-select pg_temp.ok(available(:'tempe') = 5000 + 25, 'hold released into the new month');
+select pg_temp.ok(available(:'tempe') = 5000 + 50, 'hold released into the new month');
 
 -- deactivate district
 select set_district_status(:'mesa', 'Inactive');

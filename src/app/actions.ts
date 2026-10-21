@@ -97,7 +97,7 @@ export async function setPassword(_: ActionState, fd: FormData): Promise<ActionS
 export async function submitRequest(_: ActionState, fd: FormData): Promise<ActionState> {
   let code = "";
   const res = await guard(async () => {
-    code = await rpc("submit_request", { p_type: s(fd, "type_id"), p_qty: n(fd, "qty"), p_note: s(fd, "note") });
+    code = await rpc("submit_request", { p_type: s(fd, "type_id"), p_qty: n(fd, "qty"), p_school: s(fd, "school"), p_merit: s(fd, "merit") });
     return `Request ${code} sent.`;
   });
   if (res?.error) return res;
@@ -170,6 +170,7 @@ export async function createDistrict(_: ActionState, fd: FormData): Promise<Acti
       p_name: s(fd, "name"), p_state: s(fd, "state"), p_students: n(fd, "students") ?? 0,
       p_tier: "t2", p_monthly: null, p_contact: s(fd, "contact"),
     });
+    await rpc("set_district_schools", { p_id: id, p_schools: s(fd, "schools").split(/\r?\n/) });
     return "District added.";
   });
   if (res?.error) return res;
@@ -181,6 +182,7 @@ export async function updateDistrict(_: ActionState, fd: FormData) {
       p_id: s(fd, "id"), p_name: s(fd, "name"), p_students: n(fd, "students"), p_contact: s(fd, "contact"),
       p_monthly: null, p_tier: "t2",
     });
+    await rpc("set_district_schools", { p_id: s(fd, "id"), p_schools: s(fd, "schools").split(/\r?\n/) });
     return "Saved. The new monthly points apply at the next reset.";
   });
 }
