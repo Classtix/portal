@@ -80,6 +80,25 @@ select fulfil_request((select id from requests where code = :'code1'));
 select set_internal_note((select id from requests where code = :'code1'), 'sent via Ticketmaster');
 select pg_temp.fails($$select save_event(jsonb_build_object('id','$$ || :'ev' || $$','title','Suns test game','dated',true,'date','$$ || (current_date + 20)::text || $$','types',jsonb_build_array(jsonb_build_object('id','$$ || :'ty' || $$','name','Upper','qty',5,'points',40))))$$, 'Quantity can''t go below', 'quantity floor = approved');
 
+-- My Tickets deliveries
+select id as rq1 from requests where code = :'code1' \gset
+select add_delivery(:'rq1', 'file', 'Section 210', :'tempe' || '/' || :'rq1' || '/abc-tickets.pdf', 'tickets.pdf', 1000, null) as dl1 \gset
+select add_delivery(:'rq1', 'link', 'Ticketmaster transfer', null, null, null, 'https://am.ticketmaster.com/x') as dl2 \gset
+select pg_temp.fails($$select add_delivery('$$ || :'rq1' || $$', 'file', '', 'other/path.pdf', 'x.pdf', 1, null)$$, 'isn''t attached', 'file path must belong to the request');
+select pg_temp.fails($$select add_delivery('$$ || :'rq1' || $$', 'link', '', null, null, null, 'javascript:alert(1)')$$, 'https://', 'links must be http(s)');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select pg_temp.ok((select count(*) from deliveries) = 0, 'other district cannot see Tempe tickets');
+select pg_temp.fails($$select add_delivery('$$ || :'rq1' || $$', 'link', '', null, null, null, 'https://x.example')$$, 'Only ClassTix admins', 'district cannot add tickets');
+select mark_downloaded(:'dl1');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select pg_temp.ok((select count(*) from deliveries) = 2, 'district sees its tickets');
+select pg_temp.ok((select downloaded_at is null from deliveries where id = :'dl1'), 'other district cannot mark download');
+select mark_downloaded(:'dl1');
+select pg_temp.ok((select downloaded_at is not null from deliveries where id = :'dl1'), 'download recorded');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select remove_delivery(:'dl2') is null as removed_link \gset
+select pg_temp.ok(:'removed_link' and (select count(*) from deliveries) = 1, 'admin removes a link');
+
 -- district can't see internal notes
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select pg_temp.ok((select count(*) from request_notes) = 0, 'internal notes hidden from districts');

@@ -45,7 +45,8 @@ You'll create three free accounts and add three DNS records. Do the steps in ord
    4. `0004_single_rate.sql`, which sets the single $2-per-student rate.
    5. `0005_full_rate.sql`, which makes it 1 point per student.
    6. `0006_merit_fields.sql`, which adds each district's school list and the "Merit awarded for" drop-downs.
-   7. Catalog data in `supabase/data`: `asu-home-games.sql`, then `catalog-update-2026-10.sql` (Suns, Cardinals, concerts and always-available gift cards; removes dated retail drops and the old dining category).
+   7. `0007_my_tickets.sql`, which adds My Tickets and the private `tickets` storage bucket for ticket files.
+   8. Catalog data in `supabase/data`: `asu-home-games.sql`, then `catalog-update-2026-10.sql` (Suns, Cardinals, concerts and always-available gift cards; removes dated retail drops and the old dining category).
 3. Go to **Authentication → Sign In / Providers → Email**:
    - Turn **off** "Allow new users to sign up". Accounts are invite-only.
    - Leave "Confirm email" on.

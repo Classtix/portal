@@ -26,3 +26,8 @@ export type Settings = {
   retail: { days: number[]; retailers: string[]; denoms: { label: string; points: number; qty: number }[] };
 };
 export type ActionState = { ok?: string; error?: string; at?: number } | null;
+
+export type Delivery = {
+  id: string; request_id: string; district_id: string; kind: "file" | "link"; label: string; path: string | null;
+  file_name: string | null; size: number | null; url: string | null; created_at: string; downloaded_at: string | null;
+};

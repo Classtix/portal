@@ -131,10 +131,55 @@ export async function rejectRequest(_: ActionState, fd: FormData) {
   });
 }
 export async function fulfilRequest(_: ActionState, fd: FormData) {
-  return decide(fd, async () => { await rpc("fulfil_request", { p_id: s(fd, "id") }); return "Marked fulfilled. The district was told to look out for the tickets."; });
+  return decide(fd, async () => { await rpc("fulfil_request", { p_id: s(fd, "id") }); return "Marked fulfilled and the district was emailed."; });
 }
 export async function saveInternalNote(_: ActionState, fd: FormData) {
   return guard(async () => { await rpc("set_internal_note", { p_id: s(fd, "id"), p_note: s(fd, "note") }); return "Internal note saved."; });
+}
+
+/* ------------------------------------------------------------------ admin: ticket files for My Tickets */
+const TICKET_EXT = /\.(pdf|png|jpe?g|webp|heic|gif|pkpass|zip|txt|csv|docx?|xlsx?)$/i;
+const MAX_TICKET_BYTES = 25 * 1024 * 1024;
+
+/** Step 1 of an upload: a one-time signed URL so the browser sends the file straight to private storage. */
+export async function startTicketUpload(requestId: string, fileName: string, size: number): Promise<{ path?: string; token?: string; error?: string }> {
+  try {
+    await adminOnly();
+    if (!TICKET_EXT.test(fileName)) return { error: `${fileName}: use a PDF, image, Apple Wallet pass, ZIP or document.` };
+    if (size > MAX_TICKET_BYTES) return { error: `${fileName} is over 25 MB.` };
+    const { data: r } = await createClient().from("requests").select("id, district_id, status").eq("id", requestId).maybeSingle();
+    if (!r) return { error: "Request not found." };
+    if (r.status !== "Approved" && r.status !== "Fulfilled") return { error: "Approve the request before adding tickets." };
+    const safe = fileName.normalize("NFKD").replace(/[^\w.\-]+/g, "-").replace(/-+/g, "-").slice(-120);
+    const path = `${r.district_id}/${r.id}/${crypto.randomUUID().slice(0, 8)}-${safe}`;
+    const { data, error } = await createAdminClient().storage.from("tickets").createSignedUploadUrl(path);
+    if (error || !data) return { error: "Storage isn't set up yet. Run 0007_my_tickets.sql in Supabase." };
+    return { path, token: data.token };
+  } catch (e) { return { error: (e as Error).message }; }
+}
+/** Step 2: record the uploaded file on the request. */
+export async function saveTicketFile(requestId: string, path: string, fileName: string, size: number, label: string): Promise<{ error?: string }> {
+  try {
+    await rpc("add_delivery", { p_request: requestId, p_kind: "file", p_label: label, p_path: path, p_file_name: fileName, p_size: size, p_url: null });
+    revalidatePath("/admin", "layout"); revalidatePath("/district", "layout");
+    return {};
+  } catch (e) {
+    await createAdminClient().storage.from("tickets").remove([path]).catch(() => undefined);
+    return { error: (e as Error).message };
+  }
+}
+export async function addTicketLink(_: ActionState, fd: FormData) {
+  return guard(async () => {
+    await rpc("add_delivery", { p_request: s(fd, "id"), p_kind: "link", p_label: s(fd, "label"), p_path: null, p_file_name: null, p_size: null, p_url: s(fd, "url") });
+    return "Link added to the district's My Tickets.";
+  });
+}
+export async function removeTicket(_: ActionState, fd: FormData) {
+  return guard(async () => {
+    const path = (await rpc("remove_delivery", { p_id: s(fd, "id") })) as string | null;
+    if (path) await createAdminClient().storage.from("tickets").remove([path]);
+    return "Removed.";
+  });
 }
 
 /* ------------------------------------------------------------------ admin: events */

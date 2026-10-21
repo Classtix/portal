@@ -11,6 +11,7 @@ export default async function DistrictLayout({ children }: { children: React.Rea
       { href: "/district/retail", label: "Restaurant & Retail" },
       { href: "/district/arts", label: "Arts & Culture" },
       { href: "/district/requests", label: "My requests" },
+      { href: "/district/tickets", label: "My tickets" },
       { href: "/district/points", label: "Points history" },
     ]}>
       {d ? children : <p className="banner">Your district isn&apos;t active right now, so requests are paused. Contact ClassTix at hello@classtix.org.</p>}

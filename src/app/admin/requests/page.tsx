@@ -3,9 +3,10 @@ import { requireAdmin } from "@/lib/session";
 import { Head, Pill, Empty } from "@/components/ui";
 import ActionForm from "@/components/ActionForm";
 import Pop from "@/components/Pop";
-import { approveRequest, rejectRequest, fulfilRequest, saveInternalNote } from "@/app/actions";
-import { num, pts, fDate, fDT, evWhen, remaining, sortTypes, REJECT_REASONS } from "@/lib/format";
-import type { District, EventRow, RequestRow } from "@/lib/types";
+import { approveRequest, rejectRequest, fulfilRequest, saveInternalNote, addTicketLink, removeTicket } from "@/app/actions";
+import TicketUploader from "@/components/TicketUploader";
+import { num, pts, fDate, fDT, fSize, evWhen, remaining, sortTypes, REJECT_REASONS } from "@/lib/format";
+import type { Delivery, District, EventRow, RequestRow } from "@/lib/types";
 
 export const metadata = { title: "Requests" };
 const STATUSES = ["Pending", "Approved", "Fulfilled", "Rejected", "Cancelled", "All"];
@@ -87,11 +88,14 @@ export default async function AdminRequests({ searchParams }: { searchParams: { 
 
 async function Detail({ r, e, d, back }: { r: RequestRow; e: EventRow | null; d: District | null; back: string }) {
   const { supabase } = await requireAdmin();
-  const [{ data: avail }, { data: held }, { data: note }] = await Promise.all([
+  const [{ data: avail }, { data: held }, { data: note }, { data: dels }] = await Promise.all([
     supabase.rpc("available", { p_district: r.district_id }),
     supabase.rpc("held", { p_district: r.district_id }),
     supabase.from("request_notes").select("note").eq("request_id", r.id).maybeSingle(),
+    supabase.from("deliveries").select("*").eq("request_id", r.id).order("created_at"),
   ]);
+  const D = (dels || []) as Delivery[];
+  const live = r.status === "Approved" || r.status === "Fulfilled";
   const t = e?.ticket_types.find((x) => x.id === r.type_id);
   const left = t ? remaining(t) : 0;
   const over = r.status === "Pending" && r.qty > left;
@@ -134,7 +138,27 @@ async function Detail({ r, e, d, back }: { r: RequestRow; e: EventRow | null; d:
           </Pop>
         </div>
       )}
-      {r.status === "Approved" && <ActionForm action={fulfilRequest} hidden={{ id: r.id, back }} submit="Mark fulfilled" buttonClass="btn blue" pendingLabel="Saving…" />}
+      {live && <div className="panel" style={{ background: "var(--bg)", boxShadow: "none" }}>
+        <div className="ph"><h3 style={{ fontSize: 16, margin: 0 }}>Tickets for the district</h3><span className="sub">Shows in their My Tickets</span></div>
+        {D.length ? <div className="list" style={{ marginBottom: 12 }}>{D.map((x) => (
+          <div className="item" key={x.id}>
+            <div style={{ minWidth: 0 }}>
+              <div className="t" style={{ overflowWrap: "anywhere" }}>{x.kind === "file" ? x.file_name : <a className="link" href={x.url!} target="_blank" rel="noreferrer">{x.url}</a>}</div>
+              <div className="m">{[x.label, x.kind === "file" ? fSize(x.size) : "Link", x.downloaded_at ? `Downloaded ${fDT(x.downloaded_at)}` : "Not downloaded yet"].filter(Boolean).join(" · ")}</div>
+            </div>
+            <ActionForm action={removeTicket} hidden={{ id: x.id }} submit="Remove" buttonClass="btn ghost sm" pendingLabel="Removing…" inlineMsg />
+          </div>))}</div> : <p className="sub" style={{ marginTop: 0 }}>Nothing attached yet.</p>}
+        <TicketUploader requestId={r.id} />
+        <details style={{ marginTop: 12 }}><summary className="link" style={{ cursor: "pointer" }}>Or add a link (Ticketmaster transfer, e-gift card)</summary>
+          <ActionForm action={addTicketLink} hidden={{ id: r.id }} submit="Add link" buttonClass="btn sec sm" resetOnOk>
+            <div className="f"><label htmlFor="tu">Link</label><input id="tu" name="url" type="url" required placeholder="https://" /></div>
+            <div className="f"><label htmlFor="tlb">Label <span className="sub">(optional)</span></label><input id="tlb" name="label" type="text" maxLength={120} placeholder="Ticketmaster transfer" /></div>
+          </ActionForm></details>
+      </div>}
+      {r.status === "Approved" && <>
+        <ActionForm action={fulfilRequest} hidden={{ id: r.id, back }} submit={D.length ? "Mark fulfilled and email the district" : "Mark fulfilled"} buttonClass="btn blue" pendingLabel="Saving…" />
+        <p className="sub" style={{ margin: "-8px 0 0" }}>{D.length ? "The email tells them their tickets are ready in My Tickets." : "Attach files or a link first if you want them to download from the portal."}</p>
+      </>}
       <ActionForm action={saveInternalNote} hidden={{ id: r.id }} submit="Save note" buttonClass="btn sec sm">
         <div className="f"><label htmlFor="inote">Internal note <span className="sub">(only ClassTix sees this)</span></label>
           <textarea id="inote" name="note" defaultValue={note?.note || ""} placeholder="Tickets sent via Ticketmaster transfer" /></div>

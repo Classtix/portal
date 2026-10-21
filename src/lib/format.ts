@@ -63,3 +63,5 @@ export function qtyOptions(left: number, max: number | null): number[] {
   if (cap === left && left % 2 === 1) out.push(left);
   return out;
 }
+
+export const fSize = (b: number | null) => !b ? "" : b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
