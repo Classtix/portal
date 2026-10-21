@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CatPill, Empty } from "./ui";
+import { Empty } from "./ui";
+import RewardCard from "./RewardCard";
 import { CATS, num, fDate, mLabel, mNext, mPrev, p2, thisMonth, today, evMin, evRemaining, evState, evWhen } from "@/lib/format";
 import type { EventRow } from "@/lib/types";
 
@@ -12,9 +13,9 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
   events: EventRow[]; k: string; view: "month" | "list"; cat: string; basePath: string;
   hrefFor: (id: string) => string; admin?: boolean;
 }) {
-  const cats = [...new Set(events.map((e) => e.cat))];
-  const vis = events.filter((e) => cat === "all" || e.cat === cat);
-  const undated = vis.filter((e) => !e.dated);
+  const datedEvents = events.filter((e) => e.dated);
+  const cats = [...new Set(datedEvents.map((e) => e.cat))];
+  const vis = datedEvents.filter((e) => cat === "all" || e.cat === cat);
   const href = (p: Record<string, string>) => `${basePath}?${new URLSearchParams({ view, m: k, cat, ...p })}`;
   const t = today();
   const label = (e: EventRow) => {
@@ -23,17 +24,6 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
     return s === "Open" ? `${num(evRemaining(e))} left · from ${num(evMin(e))} pts` : s;
   };
 
-  const Stub = ({ e }: { e: EventRow }) => {
-    const s = evState(e); const closed = s !== "Open";
-    return (
-      <Link className={`tk ${closed ? "closed" : ""}`} href={hrefFor(e.id)} style={{ textDecoration: "none" }}>
-        <div className="a"><CatPill c={e.cat} /><h3>{e.title}</h3>
-          <div className="m">{evWhen(e)}{e.venue ? ` · ${e.venue}` : ""}</div>
-          <div className="m">{closed ? <span className="flag">{s === "Draft" ? "Draft" : s}</span> : <>{num(evRemaining(e))} left{e.dated && e.deadline ? ` · request by ${fDate(e.deadline)}` : ""}</>}</div></div>
-        <div className="b"><span>from</span><strong>{num(evMin(e))}</strong><span>pts each</span></div>
-      </Link>
-    );
-  };
 
   let body: React.ReactNode;
   if (view === "month") {
@@ -69,8 +59,8 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
   } else {
     const dated = vis.filter((e) => e.dated && (e.date || "") >= t);
     body = <section><div className="ph"><h2 style={{ fontSize: 19 }}>Upcoming events</h2></div>
-      {dated.length ? <div className="stubs">{dated.map((e) => <Stub key={e.id} e={e} />)}</div>
-        : <Empty title="No upcoming dated events">{admin ? "Add one under Events & items." : "Check back soon, or browse the anytime rewards below."}</Empty>}</section>;
+      {dated.length ? <div className="stubs">{dated.map((e) => <RewardCard key={e.id} e={e} href={hrefFor(e.id)} />)}</div>
+        : <Empty title="No upcoming dated events">{admin ? "Add one under Events & items." : "Check back soon."}</Empty>}</section>;
   }
   return (
     <>
@@ -86,8 +76,6 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
         </div>
       </div>
       {body}
-      {undated.length > 0 && <section><div className="ph"><h2 style={{ fontSize: 19 }}>Anytime rewards</h2><span className="sub">Passes and visits without a set date</span></div>
-        <div className="stubs">{undated.map((e) => <Stub key={e.id} e={e} />)}</div></section>}
     </>
   );
 }

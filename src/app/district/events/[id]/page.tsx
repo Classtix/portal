@@ -15,10 +15,12 @@ export default async function DistrictEvent({ params }: { params: { id: string }
   if (!data) notFound();
   const e = sortTypes(data as EventRow);
   const s = evState(e);
-  const unit = e.cat === "retail" ? "cards" : "tickets";
+  const isCard = (e.series || "").startsWith("giftcard-");
+  const unit = isCard ? "cards" : e.cat === "retail" ? "awards" : "tickets";
+  const back = e.cat === "retail" ? ["/district/retail", "Restaurant & Retail"] : e.cat === "arts" ? ["/district/arts", "Arts & Culture"] : ["/district/calendar", "calendar"];
   return (
     <>
-      <div><Link className="link" href="/district/calendar">← Back to calendar</Link></div>
+      <div><Link className="link" href={back[0]}>← Back to {back[1]}</Link></div>
       <Head eyebrow={<><CatPill c={e.cat} /> {e.partner}</>} title={e.title} sub={`${evWhen(e)}${e.venue ? " · " + e.venue : ""}`} />
       <div className="grid3">
         <section className="panel">
@@ -29,8 +31,8 @@ export default async function DistrictEvent({ params }: { params: { id: string }
             <dt>Per request</dt><dd>{e.max_per_request ? `Up to ${num(e.max_per_request)}` : "No limit"}</dd>
           </dl>
           <div className="tbl-wrap" style={{ marginTop: 16 }}><table>
-            <thead><tr><th>Type</th>{unit === "tickets" && <th className="n">Seats each</th>}<th className="n">Points each</th><th className="n">Remaining</th></tr></thead>
-            <tbody>{e.ticket_types.map((t) => <tr key={t.id}><td><b>{t.name}</b></td>{unit === "tickets" && <td className="n">{num(t.seats)}</td>}<td className="n">{num(t.points)}</td><td className="n">{num(remaining(t))} / {num(t.qty)}</td></tr>)}</tbody>
+            <thead><tr><th>Type</th>{unit !== "cards" && <th className="n">Seats each</th>}<th className="n">Points each</th><th className="n">Remaining</th></tr></thead>
+            <tbody>{e.ticket_types.map((t) => <tr key={t.id}><td><b>{t.name}</b></td>{unit !== "cards" && <td className="n">{num(t.seats)}</td>}<td className="n">{num(t.points)}</td><td className="n">{num(remaining(t))} / {num(t.qty)}</td></tr>)}</tbody>
           </table></div>
         </section>
         <section className="panel">

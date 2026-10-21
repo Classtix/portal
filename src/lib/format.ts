@@ -1,7 +1,7 @@
 import type { EventRow, TicketType } from "./types";
 
 export const CATS: Record<string, string> = {
-  sports: "Sports", arts: "Arts & culture", music: "Music", dining: "Dining", retail: "Retail gift cards", other: "Other",
+  sports: "Sports", music: "Music", arts: "Arts & Culture", retail: "Restaurant & Retail", other: "Other",
 };
 export const RATE_LABEL = "$2 per student";
 /** Monthly points for a district: $2 per student, all of it as points at $2 each — 1 point per student. */

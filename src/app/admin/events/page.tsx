@@ -5,14 +5,13 @@ import { num, fDate, evRemaining, evQty, evState, sortTypes } from "@/lib/format
 import type { EventRow } from "@/lib/types";
 
 export const metadata = { title: "Events & items" };
-const FILTERS: [string, string][] = [["live", "Published & drafts"], ["Published", "Published"], ["Draft", "Drafts"], ["retail", "Retail drops"], ["Cancelled", "Cancelled"], ["Archived", "Archived"], ["all", "All"]];
+const FILTERS: [string, string][] = [["live", "Published & drafts"], ["Published", "Published"], ["Draft", "Drafts"], ["Cancelled", "Cancelled"], ["Archived", "Archived"], ["all", "All"]];
 
 export default async function AdminEvents({ searchParams }: { searchParams: { f?: string; saved?: string } }) {
   const { supabase } = await requireAdmin();
   const f = FILTERS.some(([k]) => k === searchParams.f) ? searchParams.f! : "live";
   let q = supabase.from("events").select("*, ticket_types(*)").order("date", { ascending: true, nullsFirst: false }).order("title").limit(500);
   if (f === "live") q = q.in("status", ["Published", "Draft"]);
-  else if (f === "retail") q = q.eq("series", "retail");
   else if (f !== "all") q = q.eq("status", f);
   const { data } = await q;
   const list = ((data || []) as EventRow[]).map(sortTypes);

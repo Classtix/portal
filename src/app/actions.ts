@@ -259,22 +259,8 @@ export async function setUserStatus(_: ActionState, fd: FormData) {
 /* ------------------------------------------------------------------ admin: program */
 export async function updateProgram(_: ActionState, fd: FormData) {
   return guard(async () => {
-    const retailers = s(fd, "retailers").split("\n").map((x) => x.trim()).filter(Boolean);
-    const denoms = [0, 1, 2, 3].map((i) => ({ label: s(fd, `d${i}_label`), points: n(fd, `d${i}_points`), qty: n(fd, `d${i}_qty`) }))
-      .filter((d) => d.label);
-    if (denoms.some((d) => !(Number(d.points) > 0) || !(Number(d.qty) > 0))) throw new Error("Give every card value points and a quantity above 0.");
-    const days = s(fd, "days").split(/[,\s]+/).map(Number).filter((d) => d >= 1 && d <= 28);
-    if (!days.length) throw new Error("Enter drop days between 1 and 28, like 1, 15.");
-    await rpc("update_settings", { p_rollover: s(fd, "rollover") === "1", p_retail: { days, retailers, denoms } });
-    return "Program settings saved. New retail drops use them; existing drops keep their current values.";
-  });
-}
-export async function scheduleRetail(_: ActionState, fd: FormData) {
-  return guard(async () => {
-    const m = s(fd, "month");
-    const a = (await rpc("ensure_retail", { p_month: m })) as number;
-    const b = (await rpc("ensure_retail", { p_month: s(fd, "next") })) as number;
-    return a + b ? `${a + b} retail gift card drops added.` : "Drops are already on the calendar for these two months.";
+    await rpc("update_settings", { p_rollover: s(fd, "rollover") === "1", p_retail: null });
+    return s(fd, "rollover") === "1" ? "Saved. Unused points now roll over." : "Saved. Unused points now expire at reset.";
   });
 }
 export async function runResetNow() {

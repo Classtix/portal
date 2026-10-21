@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Runs daily (vercel.json). Starts the new month on the 1st (expire/roll over points, credit allocations,
- * apply tier changes, email districts), keeps two months of retail gift card drops scheduled, and sends queued email.
+ * email districts) and sends queued email.
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
