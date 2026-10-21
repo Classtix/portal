@@ -4,7 +4,7 @@ import LedgerTable from "@/components/LedgerTable";
 import { num, pts, mLabel, mNext } from "@/lib/format";
 import type { LedgerRow } from "@/lib/types";
 
-export const metadata = { title: "Points history" };
+export const metadata = { title: "Points History" };
 
 export default async function Points() {
   const { supabase, district: d, available, held, settings } = await districtContext();
@@ -12,7 +12,7 @@ export default async function Points() {
   const { data } = await supabase.from("ledger").select("*").eq("district_id", d.id).order("at").order("id");
   return (
     <>
-      <Head eyebrow={d.name} title="Points history" sub="Every allocation, hold, release, spend and adjustment, newest first." />
+      <Head eyebrow={d.name} title="Points History" sub="Every allocation, hold, release, spend and adjustment, newest first." />
       <div className="kpis">
         <Kpi label="Available" value={pts(available)} hot />
         <Kpi label="On hold" value={pts(held)} small="pending requests" />

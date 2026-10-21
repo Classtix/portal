@@ -7,7 +7,7 @@ import { cancelRequest } from "@/app/actions";
 import { num, pts, fDate, fShort } from "@/lib/format";
 import type { RequestRow } from "@/lib/types";
 
-export const metadata = { title: "My requests" };
+export const metadata = { title: "My Requests" };
 const ST = ["all", "Pending", "Approved", "Fulfilled", "Rejected", "Cancelled"];
 
 export default async function MyRequests({ searchParams }: { searchParams: { status?: string; sent?: string } }) {
@@ -20,7 +20,7 @@ export default async function MyRequests({ searchParams }: { searchParams: { sta
   const R = (data || []) as (RequestRow & { events: { title: string; date: string | null; dated: boolean } | null; ticket_types: { name: string } | null })[];
   return (
     <>
-      <Head eyebrow={district.name} title="My requests" sub="Track every request from submitted to tickets sent." />
+      <Head eyebrow={district.name} title="My Requests" sub="Track every request from submitted to tickets sent." />
       {searchParams.sent && <p className="msg-ok">Request {searchParams.sent} sent. Its points are on hold until ClassTix reviews it.</p>}
       <div className="chips">{ST.map((s) => <Link key={s} className="chip" aria-current={st === s ? "true" : undefined} href={`/district/requests?status=${s}`}>{s === "all" ? "All" : s}</Link>)}</div>
       <section className="panel">

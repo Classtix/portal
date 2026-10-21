@@ -4,7 +4,7 @@ import { Head, Empty, CatPill } from "@/components/ui";
 import { num, fDate, fmtTime, fSize, today } from "@/lib/format";
 import type { Delivery, RequestRow } from "@/lib/types";
 
-export const metadata = { title: "My tickets" };
+export const metadata = { title: "My Tickets" };
 
 type Row = RequestRow & {
   events: { title: string; date: string | null; dated: boolean; time: string | null; venue: string; cat: string; series: string | null } | null;
@@ -31,7 +31,7 @@ export default async function MyTickets({ searchParams }: { searchParams: { kind
 
   return (
     <>
-      <Head eyebrow={district.name} title="My tickets"
+      <Head eyebrow={district.name} title="My Tickets"
         sub="Tickets and gift cards for your approved requests. Download them here once ClassTix attaches them." />
       <div className="chips">{KINDS.map(([k, l]) => <Link key={k} className="chip" aria-current={kind === k ? "true" : undefined} href={`/district/tickets?kind=${k}`}>{l}</Link>)}</div>
       {!all.length ? <section className="panel"><Empty title="No tickets yet">When ClassTix approves a request, it shows up here. <Link className="link" href="/district/calendar">Browse the calendar</Link>.</Empty></section> : <>
