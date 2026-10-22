@@ -7,7 +7,7 @@ export default async function DistrictLayout({ children }: { children: React.Rea
   return (
     <Shell me={profile} districtName={d?.name} nav={[
       { href: "/district", label: "Dashboard", exact: true },
-      { href: "/district/calendar", label: "Event Calendar" },
+      { href: "/district/calendar", label: "Music & Sports Events Calendar" },
       { href: "/district/retail", label: "Restaurant & Retail" },
       { href: "/district/arts", label: "Arts & Culture" },
       { href: "/district/requests", label: "My Requests" },
