@@ -12,7 +12,7 @@ type Row = RequestRow & {
   deliveries: Delivery[];
 };
 const KINDS = [["all", "All"], ["tickets", "Tickets"], ["cards", "Gift cards"]] as const;
-const isCard = (r: Row) => /^(giftcard-|retail)/.test(r.events?.series || "");
+const isCard = (r: Row) => /^(giftcard-|restaurantcard-|retail)/.test(r.events?.series || "");
 
 export default async function MyTickets({ searchParams }: { searchParams: { kind?: string } }) {
   const { supabase, district } = await districtContext();

@@ -15,7 +15,7 @@ export default async function DistrictEvent({ params }: { params: { id: string }
   if (!data) notFound();
   const e = sortTypes(data as EventRow);
   const s = evState(e);
-  const isCard = (e.series || "").startsWith("giftcard-");
+  const isCard = /^(giftcard|restaurantcard)-/.test(e.series || "");
   const unit = isCard ? "cards" : e.cat === "retail" ? "awards" : "tickets";
   const back = e.cat === "retail" ? ["/district/retail", "Restaurant & Retail"] : e.cat === "arts" ? ["/district/arts", "Arts & Culture"] : ["/district/calendar", "calendar"];
   return (

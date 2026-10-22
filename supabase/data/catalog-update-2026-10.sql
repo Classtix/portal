@@ -60,8 +60,8 @@ insert into ticket_types (event_id, name, qty, points, seats, sort) select e.id,
     ('$100 gift card', 20, 50, 1, 2)) as t(name, qty, points, seats, sort);
 
 with e as (insert into events (title, cat, partner, description, dated, date, time, venue, deadline, status, series)
-  select 'The Cheesecake Factory gift card', 'retail', 'The Cheesecake Factory', 'A The Cheesecake Factory gift card, delivered digitally. Pick $50 or $100.', false, null, '', '', null, 'Published', 'giftcard-the-cheesecake-factory'
-  where not exists (select 1 from events where series = 'giftcard-the-cheesecake-factory') returning id)
+  select 'The Cheesecake Factory gift card', 'retail', 'The Cheesecake Factory', 'The Cheesecake Factory gift card for a family dinner, delivered digitally. Pick $50 or $100.', false, null, '', '', null, 'Published', 'restaurantcard-the-cheesecake-factory'
+  where not exists (select 1 from events where series in ('giftcard-the-cheesecake-factory', 'restaurantcard-the-cheesecake-factory')) returning id)
 insert into ticket_types (event_id, name, qty, points, seats, sort) select e.id, t.* from e cross join (values
     ('$50 gift card', 40, 25, 1, 1),
     ('$100 gift card', 20, 50, 1, 2)) as t(name, qty, points, seats, sort);
