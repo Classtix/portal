@@ -3,20 +3,25 @@ import { Empty } from "./ui";
 import RewardCard from "./RewardCard";
 import { CATS, num, fDate, mLabel, mNext, mPrev, p2, thisMonth, today, evMin, evRemaining, evState, evWhen } from "@/lib/format";
 import type { EventRow } from "@/lib/types";
+import { GROUPS, groupOf } from "@/lib/colors";
 
 /**
  * Month and list calendar shared by the district and admin sides.
  * `basePath` is the page's own URL (for filter links); `hrefFor` is where an event opens.
  * `admin` shows draft listings and a status label on each event.
  */
-export default function CalendarView({ events, k, view, cat, basePath, hrefFor, admin }: {
-  events: EventRow[]; k: string; view: "month" | "list"; cat: string; basePath: string;
+export default function CalendarView({ events, k, view, cat, g = "all", basePath, hrefFor, admin }: {
+  events: EventRow[]; k: string; view: "month" | "list"; cat: string; g?: string; basePath: string;
   hrefFor: (id: string) => string; admin?: boolean;
 }) {
   const datedEvents = events.filter((e) => e.dated);
   const cats = [...new Set(datedEvents.map((e) => e.cat))];
-  const vis = datedEvents.filter((e) => cat === "all" || e.cat === cat);
-  const href = (p: Record<string, string>) => `${basePath}?${new URLSearchParams({ view, m: k, cat, ...p })}`;
+  const inCat = datedEvents.filter((e) => cat === "all" || e.cat === cat);
+  const present = new Set(inCat.map((e) => groupOf(e).key));
+  const groups = GROUPS.filter((x) => present.has(x.key));
+  const vis = inCat.filter((e) => g === "all" || groupOf(e).key === g);
+  const href = (p: Record<string, string>) => `${basePath}?${new URLSearchParams({ view, m: k, cat, g, ...p })}`;
+  const tint = (e: EventRow) => ({ ["--c" as string]: groupOf(e).color }) as React.CSSProperties;
   const t = today();
   const label = (e: EventRow) => {
     const s = evState(e);
@@ -40,8 +45,8 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
         <div key={iso} className={`d ${out ? "out" : ""} ${iso === t ? "today" : ""} ${evs.length ? "" : "none"}`}>
           <span className="dn"><span className="dshort">{dd.getDate()}</span><span className="dlong">{fDate(iso)}</span></span>
           {evs.map((e) => (
-            <Link key={e.id} title={`${e.title} · ${label(e)}`} className={`ce ${evState(e) !== "Open" ? "x" : ""}`} href={hrefFor(e.id)} style={{ textDecoration: "none" }}>
-              <b>{e.title}</b><span className="dl">{label(e)}</span>
+            <Link key={e.id} title={`${e.title} · ${label(e)}`} className={`ce ${evState(e) !== "Open" ? "x" : ""}`} href={hrefFor(e.id)} style={{ textDecoration: "none", ...tint(e) }}>
+              <b>{e.title}</b><span className="dl">{groupOf(e).key === "other" ? "" : `${groupOf(e).label} · `}{label(e)}</span>
             </Link>))}
         </div>);
     }
@@ -59,15 +64,15 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
   } else {
     const dated = vis.filter((e) => e.dated && (e.date || "") >= t);
     body = <section><div className="ph"><h2 style={{ fontSize: 19 }}>Upcoming events</h2></div>
-      {dated.length ? <div className="stubs">{dated.map((e) => <RewardCard key={e.id} e={e} href={hrefFor(e.id)} />)}</div>
+      {dated.length ? <div className="stubs">{dated.map((e) => <RewardCard key={e.id} e={e} href={hrefFor(e.id)} accent={groupOf(e).color} />)}</div>
         : <Empty title="No upcoming dated events">{admin ? "Add one under Events & items." : "Check back soon."}</Empty>}</section>;
   }
   return (
     <>
       <div className="row">
         <div className="chips">
-          <Link className="chip" aria-current={cat === "all" ? "true" : undefined} href={href({ cat: "all" })}>All</Link>
-          {cats.map((c) => <Link key={c} className="chip" aria-current={cat === c ? "true" : undefined} href={href({ cat: c })}>{CATS[c] || c}</Link>)}
+          <Link className="chip" aria-current={cat === "all" ? "true" : undefined} href={href({ cat: "all", g: "all" })}>All</Link>
+          {cats.map((c) => <Link key={c} className="chip" aria-current={cat === c ? "true" : undefined} href={href({ cat: c, g: "all" })}>{CATS[c] || c}</Link>)}
         </div>
         <span className="spacer" />
         <div className="chips">
@@ -75,16 +80,22 @@ export default function CalendarView({ events, k, view, cat, basePath, hrefFor, 
           <Link className="chip" aria-current={view === "list" ? "true" : undefined} href={href({ view: "list" })}>List</Link>
         </div>
       </div>
+      {groups.length > 1 && <div className="legend" aria-label="Color key">
+        <Link className="chip sm" aria-current={g === "all" ? "true" : undefined} href={href({ g: "all" })}>Every team &amp; venue</Link>
+        {groups.map((x) => <Link key={x.key} className="chip sm" aria-current={g === x.key ? "true" : undefined} href={href({ g: g === x.key ? "all" : x.key })}
+          style={{ ["--c" as string]: x.color } as React.CSSProperties}><i className="sw" aria-hidden="true" />{x.label}</Link>)}
+      </div>}
       {body}
     </>
   );
 }
 
 /** Reads the calendar's month, view and category from the page's search params. */
-export function calendarParams(sp: { m?: string; view?: string; cat?: string }) {
+export function calendarParams(sp: { m?: string; view?: string; cat?: string; g?: string }) {
   return {
     view: (sp.view === "list" ? "list" : "month") as "month" | "list",
     k: /^\d{4}-\d{2}$/.test(sp.m || "") ? sp.m! : thisMonth(),
     cat: sp.cat && CATS[sp.cat] ? sp.cat : "all",
+    g: GROUPS.some((x) => x.key === sp.g) ? sp.g! : "all",
   };
 }

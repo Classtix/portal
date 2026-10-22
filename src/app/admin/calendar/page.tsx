@@ -7,7 +7,7 @@ import type { EventRow } from "@/lib/types";
 
 export const metadata = { title: "Calendar" };
 
-export default async function AdminCalendar({ searchParams }: { searchParams: { m?: string; view?: string; cat?: string } }) {
+export default async function AdminCalendar({ searchParams }: { searchParams: { m?: string; view?: string; cat?: string; g?: string } }) {
   const { supabase } = await requireAdmin();
   const { data } = await supabase.from("events").select("*, ticket_types(*)").in("status", ["Published", "Draft"]).order("date", { ascending: true, nullsFirst: false });
   return (

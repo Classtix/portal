@@ -147,9 +147,9 @@ tr.on td{background:var(--blue-soft)}
 .cal .d.out{background:var(--stub)}
 .cal .d .dn{font-size:12px;font-weight:700;color:var(--muted)}
 .cal .d.today .dn{color:var(--on-accent);background:var(--orange);border-radius:99px;padding:0 7px;align-self:flex-start}
-.cal .ce{border:0;text-align:left;background:var(--blue-soft);color:var(--ink);border-radius:6px;padding:4px 6px;font-size:12px;line-height:1.25;border-left:3px solid var(--blue)}
+.cal .ce{border:0;text-align:left;background:var(--blue-soft);background:color-mix(in srgb,var(--c,var(--blue)) 13%,var(--paper));color:var(--ink);border-radius:6px;padding:4px 6px;font-size:12px;line-height:1.25;border-left:4px solid var(--c,var(--blue))}
 .cal .ce b{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cal .ce.x{border-left-color:var(--muted);background:var(--stub);color:var(--muted)}
+.cal .ce.x{opacity:.55}
 .cal .ce .dl{font-size:11px;color:var(--muted)}
 .cal .dlong{display:none}
 @media (max-width:700px){
@@ -242,3 +242,10 @@ a.chip{color:var(--ink)}
 .tk .a .cat{align-self:flex-start}
 .detail{display:flex;flex-direction:column;gap:16px}
 .detail .ph{margin-bottom:0}
+
+/* calendar color key */
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 4px}
+.legend .chip.sm{font-size:12.5px;padding:5px 10px;display:inline-flex;align-items:center;gap:6px}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--c);flex:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cal .ce{border-left-color:color-mix(in srgb,var(--c,var(--blue)) 70%,#fff);background:color-mix(in srgb,var(--c,var(--blue)) 26%,var(--paper))}}
+:root[data-theme="dark"] .cal .ce{border-left-color:color-mix(in srgb,var(--c,var(--blue)) 70%,#fff);background:color-mix(in srgb,var(--c,var(--blue)) 26%,var(--paper))}

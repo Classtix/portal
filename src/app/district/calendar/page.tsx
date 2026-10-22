@@ -6,7 +6,7 @@ import type { EventRow } from "@/lib/types";
 
 export const metadata = { title: "Event Calendar" };
 
-export default async function Calendar({ searchParams }: { searchParams: { m?: string; view?: string; cat?: string } }) {
+export default async function Calendar({ searchParams }: { searchParams: { m?: string; view?: string; cat?: string; g?: string } }) {
   const { supabase, district, available } = await districtContext();
   if (!district) return null;
   const { data } = await supabase.from("events").select("*, ticket_types(*)").eq("status", "Published").order("date", { ascending: true, nullsFirst: false });
