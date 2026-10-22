@@ -34,7 +34,7 @@ export default async function DistrictDash() {
         <section className="panel"><div className="ph"><h2>Recent requests</h2><Link className="link" href="/district/requests">See all</Link></div>
           {R.length ? <div className="list">{R.slice(0, 5).map((r) => (
             <div className="item" key={r.id}><div><div className="t">{r.events?.title}</div><div className="m">{num(r.qty)} · {pts(r.qty * r.points_each)} · {fShort(r.created_at)}</div></div><Pill s={r.status} /></div>))}</div>
-            : <Empty title="No requests yet"><Link href="/district/calendar">Open the Music &amp; Sports Events Calendar</Link> to request tickets.</Empty>}
+            : <Empty title="No requests yet"><Link href="/district/calendar">Open the Music &amp; Sports Calendar</Link> to request tickets.</Empty>}
         </section>
       </div>
     </>

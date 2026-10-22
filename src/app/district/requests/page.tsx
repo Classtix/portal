@@ -43,7 +43,7 @@ export default async function MyRequests({ searchParams }: { searchParams: { sta
                 </Pop>}</td>
               </tr>);
           })}</tbody></table></div>
-          : <Empty title="No requests here"><Link href="/district/calendar">Open the Music &amp; Sports Events Calendar</Link> to request tickets.</Empty>}
+          : <Empty title="No requests here"><Link href="/district/calendar">Open the Music &amp; Sports Calendar</Link> to request tickets.</Empty>}
       </section>
     </>
   );

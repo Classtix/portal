@@ -13,7 +13,7 @@ export default async function AdminCalendar({ searchParams }: { searchParams: { 
   return (
     <>
       <Head eyebrow="ClassTix Admin" title="Calendar"
-        sub="What districts see on their Music &amp; Sports Events Calendar, plus your drafts. Click any event to edit it."
+        sub="What districts see on their Music &amp; Sports Calendar, plus your drafts. Click any event to edit it."
         right={<Link className="btn" href="/admin/events/new">New event or item</Link>} />
       <CalendarView events={((data || []) as EventRow[]).map(sortTypes)} {...calendarParams(searchParams)}
         basePath="/admin/calendar" hrefFor={(id) => `/admin/events/${id}`} admin />

@@ -17,7 +17,7 @@ export default async function DistrictEvent({ params }: { params: { id: string }
   const s = evState(e);
   const isCard = /^(giftcard|restaurantcard)-/.test(e.series || "");
   const unit = isCard ? "cards" : e.cat === "retail" ? "awards" : "tickets";
-  const back = e.cat === "retail" ? ["/district/retail", "Restaurant & Retail"] : e.cat === "arts" ? ["/district/arts", "Arts & Culture"] : ["/district/calendar", "Music & Sports Events Calendar"];
+  const back = e.cat === "retail" ? ["/district/retail", "Restaurant & Retail"] : e.cat === "arts" ? ["/district/arts", "Arts & Culture"] : ["/district/calendar", "Music & Sports Calendar"];
   return (
     <>
       <div><Link className="link" href={back[0]}>← Back to {back[1]}</Link></div>
