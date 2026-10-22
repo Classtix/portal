@@ -81,7 +81,7 @@ export default function CalendarView({ events, k, view, cat, g = "all", basePath
         </div>
       </div>
       {groups.length > 1 && <div className="legend" aria-label="Color key">
-        <Link className="chip sm" aria-current={g === "all" ? "true" : undefined} href={href({ g: "all" })}>Every team &amp; venue</Link>
+        <Link className="chip sm" aria-current={g === "all" ? "true" : undefined} href={href({ g: "all" })}>Teams &amp; Venues</Link>
         {groups.map((x) => <Link key={x.key} className="chip sm" aria-current={g === x.key ? "true" : undefined} href={href({ g: g === x.key ? "all" : x.key })}
           style={{ ["--c" as string]: x.color } as React.CSSProperties}><i className="sw" aria-hidden="true" />{x.label}</Link>)}
       </div>}
