@@ -23,7 +23,7 @@ export default async function DistrictDash() {
         <Kpi label="Available" value={pts(available)} small="ready to spend" hot />
         <Kpi label="On hold" value={pts(held)} small={`${R.filter((r) => r.status === "Pending").length} pending requests`} />
         <Kpi label="Spent this month" value={pts(spent)} small="approved requests" />
-        <Kpi label="Monthly allocation" value={pts(d.monthly)} small={`${num(d.students)} students × $2`} />
+        <Kpi label="Monthly allocation" value={pts(d.monthly)} />
       </div>
       <div className="grid2">
         <section className="panel"><h2>Upcoming approved events</h2>

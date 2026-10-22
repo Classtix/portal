@@ -1,7 +1,7 @@
 import { districtContext } from "@/lib/district";
 import { Head, Kpi } from "@/components/ui";
 import LedgerTable from "@/components/LedgerTable";
-import { num, pts, mLabel, mNext } from "@/lib/format";
+import { pts, mLabel, mNext } from "@/lib/format";
 import type { LedgerRow } from "@/lib/types";
 
 export const metadata = { title: "Points History" };
@@ -16,7 +16,7 @@ export default async function Points() {
       <div className="kpis">
         <Kpi label="Available" value={pts(available)} hot />
         <Kpi label="On hold" value={pts(held)} small="pending requests" />
-        <Kpi label="Monthly allocation" value={pts(d.monthly)} small={`${num(d.students)} students × $2`} />
+        <Kpi label="Monthly allocation" value={pts(d.monthly)} />
         <Kpi label="Next reset" value={mLabel(mNext(settings.current_month))} small={settings.rollover ? "Unused points roll over" : "Unused points expire"} />
       </div>
       <section className="panel"><LedgerTable rows={(data || []) as LedgerRow[]} /></section>
