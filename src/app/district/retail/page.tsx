@@ -16,7 +16,7 @@ export default async function Retail() {
     <>
       <Head eyebrow={district.name} title="Restaurant & Retail" sub={<>Gift cards and restaurant rewards, available any time. You have <b>{pts(available)}</b> available.</>} />
       <CategoryList hrefFor={(id) => `/district/events/${id}`} groups={[
-        { title: "Gift cards", sub: "$50 = 25 pts · $100 = 50 pts", items: all.filter(isCard) },
+        { title: "Gift cards", sub: "$50 = 25 pts · $100 = 50 pts · $250 = 125 pts", items: all.filter(isCard) },
         { title: "Restaurants", items: all.filter((e) => !isCard(e)) },
       ]} />
     </>
