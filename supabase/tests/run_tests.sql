@@ -53,6 +53,9 @@ select pg_temp.ok((select count(*) from districts) = 1, 'district sees only its 
 select pg_temp.ok(available(:'mesa') is null, 'district cannot read another balance');
 select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 10, 'Tempe High School', 'Attendance')$$, 'most you can request', 'per-request max enforced');
 select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 3, 'Tempe High School', 'Attendance')$$, 'multiples of 2', 'odd amounts refused');
+select submit_request((select id from ticket_types where event_id = (select id from events where cat = 'retail' and status = 'Published' order by title limit 1) limit 1), 1, 'Tempe High School', 'Grades') as onecard \gset
+select pg_temp.ok((select qty from requests where code = :'onecard') = 1, 'retail allows a single card');
+select cancel_request((select id from requests where code = :'onecard'));
 select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 2, 'Lincoln Elementary', 'Attendance')$$, 'district''s schools', 'school must be on the district list');
 select pg_temp.fails($$select submit_request('$$ || :'ty' || $$', 2, 'Tempe High School', 'Sports')$$, 'merit type', 'merit type must be on the list');
 select pg_temp.fails($$select approve_request(gen_random_uuid())$$, 'Only ClassTix admins', 'district cannot approve');
@@ -69,7 +72,7 @@ select pg_temp.fails($$select cancel_request((select id from requests where code
 
 -- admin decisions
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-select pg_temp.ok((select count(*) from outbox where kind = 'new') = 2, 'admins emailed for each new request');
+select pg_temp.ok((select count(*) from outbox where kind = 'new') = 3, 'admins emailed for each new request');
 select approve_request((select id from requests where code = :'code1'));
 select pg_temp.ok((select approved from ticket_types where id = :'ty') = 6, 'inventory updated on approve');
 select pg_temp.fails($$select approve_request((select id from requests where code = '$$ || :'code2' || $$'))$$, 'Only 4 left', 'no overselling');

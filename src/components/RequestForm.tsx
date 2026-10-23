@@ -13,14 +13,14 @@ function Submit({ disabled }: { disabled: boolean }) {
   return <button className="btn" type="submit" disabled={disabled || pending} style={{ width: "100%", justifyContent: "center" }}>{pending ? "Sending…" : "Submit request"}</button>;
 }
 
-export default function RequestForm({ types, available, max, unit, schools }: { types: TicketType[]; available: number; max: number | null; unit: string; schools: string[] }) {
+export default function RequestForm({ types, available, max, unit, schools, step = 2 }: { types: TicketType[]; available: number; max: number | null; unit: string; schools: string[]; step?: number }) {
   const first = types.find((t) => t.qty - t.approved > 0) || types[0];
   const [tid, setTid] = useState(first?.id || "");
   const [qty, setQty] = useState("");
   const [state, action] = useFormState(submitRequest, null);
   const t = types.find((x) => x.id === tid);
   const left = t ? t.qty - t.approved : 0;
-  const opts = qtyOptions(left, max);
+  const opts = qtyOptions(left, max, step);
   const q = opts.includes(parseInt(qty, 10)) ? parseInt(qty, 10) : 0;
   const schoolList = schools.length ? schools : ["District-wide"];
   const cost = t ? q * t.points : 0;
