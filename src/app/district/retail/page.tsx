@@ -5,6 +5,7 @@ import { pts, sortTypes } from "@/lib/format";
 import type { EventRow } from "@/lib/types";
 
 export const metadata = { title: "Restaurant & Retail" };
+const PRICES = "$25 = 13 pts · $50 = 25 pts · $100 = 50 pts · $250 = 125 pts";
 
 export default async function Retail() {
   const { supabase, district, available } = await districtContext();
@@ -16,8 +17,8 @@ export default async function Retail() {
     <>
       <Head eyebrow={district.name} title="Restaurant & Retail" sub={<>Gift cards and restaurant rewards, available any time. You have <b>{pts(available)}</b> available.</>} />
       <CategoryList hrefFor={(id) => `/district/events/${id}`} groups={[
-        { title: "Gift cards", sub: "$50 = 25 pts · $100 = 50 pts · $250 = 125 pts", items: all.filter(isCard) },
-        { title: "Restaurants", items: all.filter((e) => !isCard(e)) },
+        { title: "Gift cards", sub: PRICES, items: all.filter(isCard) },
+        { title: "Restaurants", sub: PRICES, items: all.filter((e) => !isCard(e)) },
       ]} />
     </>
   );
