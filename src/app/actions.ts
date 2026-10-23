@@ -80,6 +80,15 @@ export async function sendPasswordReset(_: ActionState, fd: FormData): Promise<A
   return done("If that email has access, a reset link is on its way. Check your inbox.");
 }
 
+/** Uses an invite or reset token only when the person presses Continue (see auth/confirm). */
+export async function continueLink(fd: FormData) {
+  const token_hash = s(fd, "token_hash"), type = s(fd, "type");
+  if (token_hash && ["invite", "recovery", "magiclink", "signup", "email"].includes(type)) {
+    const { error } = await createClient().auth.verifyOtp({ type: type as "invite" | "recovery" | "magiclink" | "signup" | "email", token_hash });
+    if (!error) redirect("/set-password");
+  }
+  redirect("/login?e=link");
+}
 export async function setPassword(_: ActionState, fd: FormData): Promise<ActionState> {
   const p1 = s(fd, "password"), p2 = s(fd, "confirm");
   if (p1.length < 10) return fail("Use at least 10 characters.");
@@ -259,7 +268,7 @@ async function sendInviteLink(email: string, name: string, role: string, distric
   const link = `${SITE()}/auth/confirm?token_hash=${data.properties.hashed_token}&type=${type}`;
   await admin.from("outbox").insert({
     to_email: email, to_name: name, kind: "invite", subject: "Your invite to the ClassTix portal",
-    body: `Hi ${name},\n\nYou've been invited to the ClassTix District Rewards Portal as a ${role === "admin" ? "ClassTix Admin" : "District Admin"}${districtName ? " for " + districtName : ""}.\n\nOpen this link to set your password and sign in. It works once and expires in 24 hours:\n\n${link}\n\nAfter that, sign in any time at ${SITE()}\n\nThe ClassTix team`,
+    body: `Hi ${name},\n\nYou've been invited to the ClassTix District Rewards Portal as a ${role === "admin" ? "ClassTix Admin" : "District Admin"}${districtName ? " for " + districtName : ""}.\n\nOpen this link to set your password and sign in. It works once; if it has expired, use \"Forgot your password?\" on the sign-in page to get a new one:\n\n${link}\n\nAfter that, sign in any time at ${SITE()}\n\nThe ClassTix team`,
   });
   return data.user.id;
 }
