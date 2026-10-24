@@ -249,3 +249,24 @@ a.chip{color:var(--ink)}
 .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--c);flex:none}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cal .ce{border-left-color:color-mix(in srgb,var(--c,var(--blue)) 70%,#fff);background:color-mix(in srgb,var(--c,var(--blue)) 26%,var(--paper))}}
 :root[data-theme="dark"] .cal .ce{border-left-color:color-mix(in srgb,var(--c,var(--blue)) 70%,#fff);background:color-mix(in srgb,var(--c,var(--blue)) 26%,var(--paper))}
+
+/* assemblies */
+.pill.Requested{background:var(--pend-bg);color:var(--pend)}
+.pill.Confirmed{background:var(--ok-bg);color:var(--ok)}
+.pill.Declined{background:var(--bad-bg);color:var(--bad)}
+.acal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--line);gap:1px}
+.acal .dh{background:var(--stub);padding:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.acal .d{background:var(--paper);min-height:64px;padding:5px;display:flex;flex-direction:column;gap:3px;min-width:0;color:inherit;text-decoration:none}
+.acal .d .n{font-size:12px;font-weight:700}
+.acal .d.off{background:var(--bg);color:var(--muted)}
+.acal .d.off .n{font-weight:500;opacity:.7}
+.acal a.d:hover{background:var(--blue-soft)}
+.acal .d.sel{outline:2px solid var(--orange);outline-offset:-2px;background:var(--orange-soft)}
+.acal .d.out{opacity:.45}
+.acal .tag{font-size:10.5px;line-height:1.2;border-radius:4px;padding:2px 4px;background:var(--pend-bg);color:var(--pend);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acal .tag.Confirmed{background:var(--ok-bg);color:var(--ok)}
+.spk{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.spk a{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:inherit;text-decoration:none;border-left:5px solid var(--orange)}
+.spk a[aria-current="true"]{background:var(--orange-soft)}
+.spk b{font-size:16px}.spk span{font-size:13px;color:var(--muted)}
+@media (max-width:700px){.acal .d{min-height:46px}.acal .tag{display:none}.acal .d.has::after{content:"";width:6px;height:6px;border-radius:99px;background:var(--orange)}}

@@ -47,7 +47,8 @@ You'll create three free accounts and add three DNS records. Do the steps in ord
    6. `0006_merit_fields.sql`, which adds each district's school list and the "Merit awarded for" drop-downs.
    7. `0007_my_tickets.sql`, which adds My Tickets and the private `tickets` storage bucket for ticket files.
    8. `0008_retail_single_qty.sql`, which lets Restaurant & Retail requests be any number of cards.
-   9. Catalog data in `supabase/data`: `asu-home-games.sql`, then `catalog-update-2026-10.sql` (Suns, Cardinals, concerts and always-available gift cards; removes dated retail drops and the old dining category).
+   9. `0009_assembly_speakers.sql`, which adds Assembly Giveaway speaker requests (ASU Athletics, Suns, Cardinals, Diamondbacks).
+   10. Catalog data in `supabase/data`: `asu-home-games.sql`, then `catalog-update-2026-10.sql` (Suns, Cardinals, concerts and always-available gift cards; removes dated retail drops and the old dining category).
 3. Go to **Authentication → Sign In / Providers → Email**:
    - Turn **off** "Allow new users to sign up". Accounts are invite-only.
    - Leave "Confirm email" on.

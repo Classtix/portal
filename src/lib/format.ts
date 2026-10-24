@@ -65,3 +65,18 @@ export function qtyOptions(left: number, max: number | null, step = 2): number[]
 }
 
 export const fSize = (b: number | null) => !b ? "" : b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
+
+/** "09:30:00" -> "9:30 AM" */
+export function fmtClock(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+}
+/** Assembly start times offered: 7:00 AM to 5:00 PM every 15 minutes. */
+export const ASSEMBLY_TIMES = Array.from({ length: 41 }, (_, i) => {
+  const mins = 7 * 60 + i * 15; return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+});
+/** Earliest bookable assembly day: two weeks from today. */
+export function assemblyEarliest() {
+  const d = new Date(today() + "T12:00:00"); d.setDate(d.getDate() + 14);
+  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+}

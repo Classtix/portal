@@ -191,6 +191,37 @@ export async function removeTicket(_: ActionState, fd: FormData) {
   });
 }
 
+/* ------------------------------------------------------------------ assemblies (speakers) */
+export async function requestAssembly(_: ActionState, fd: FormData): Promise<ActionState> {
+  let code = "";
+  const date = s(fd, "date");
+  const res = await guard(async () => {
+    code = await rpc("request_assembly", {
+      p_speaker: s(fd, "speaker"), p_school: s(fd, "school"), p_date: date, p_time: s(fd, "time"),
+      p_audience: n(fd, "audience") ?? 0, p_grades: s(fd, "grades"), p_note: s(fd, "note"),
+    });
+    return `Request ${code} sent.`;
+  });
+  if (res?.error) return res;
+  redirect(`/district/assemblies?sent=${encodeURIComponent(code)}&m=${date.slice(0, 7)}`);
+}
+export async function cancelAssembly(_: ActionState, fd: FormData) {
+  return guard(async () => { await rpc("cancel_assembly", { p_id: s(fd, "id") }); return "Request cancelled."; });
+}
+export async function decideAssembly(_: ActionState, fd: FormData) {
+  return guard(async () => {
+    const st = s(fd, "status");
+    await rpc("decide_assembly", { p_id: s(fd, "id"), p_status: st, p_note: s(fd, "note") });
+    return st === "Confirmed" ? "Confirmed. The district was emailed." : "Declined. The district was emailed.";
+  });
+}
+export async function saveSpeaker(_: ActionState, fd: FormData) {
+  return guard(async () => {
+    await rpc("save_speaker", { p_id: s(fd, "id") || null, p_name: s(fd, "name"), p_org: s(fd, "org"), p_description: s(fd, "description"), p_active: s(fd, "active") !== "off" });
+    return "Speaker saved.";
+  });
+}
+
 /* ------------------------------------------------------------------ admin: events */
 export async function saveEvent(_: ActionState, fd: FormData): Promise<ActionState> {
   let id = "";

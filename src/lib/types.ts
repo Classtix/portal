@@ -31,3 +31,10 @@ export type Delivery = {
   id: string; request_id: string; district_id: string; kind: "file" | "link"; label: string; path: string | null;
   file_name: string | null; size: number | null; url: string | null; created_at: string; downloaded_at: string | null;
 };
+
+export type Speaker = { id: string; name: string; org: string; description: string; active: boolean; sort: number };
+export type AssemblyStatus = "Requested" | "Confirmed" | "Declined" | "Cancelled";
+export type AssemblyRequest = {
+  id: string; code: string; district_id: string; speaker_id: string; school: string; date: string; start_time: string;
+  audience: number; grades: string; note: string; status: AssemblyStatus; admin_note: string; created_at: string; decided_at: string | null;
+};

@@ -156,6 +156,28 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select reject_request((select id from requests where code = :'code4'), 'Other');
 select pg_temp.ok(available(:'tempe') = 5000 + 50, 'hold released into the new month');
 
+-- assembly speakers
+select id as spk from speakers where name = 'Phoenix Suns' \gset
+select (select d::date from generate_series(az_today() + 14, az_today() + 21, interval '1 day') d where extract(isodow from d) < 6 limit 1) as aday \gset
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select pg_temp.ok((select count(*) from speakers) = 4, 'four speakers seeded');
+select pg_temp.fails($$select request_assembly('$$ || :'spk' || $$', 'Tempe High School', az_today() + 3, '09:00', 400, '9-12', '')$$, 'two weeks', 'needs two weeks lead time');
+select pg_temp.fails($$select request_assembly('$$ || :'spk' || $$', 'Nowhere High', '$$ || :'aday' || $$', '09:00', 400, '', '')$$, 'district''s schools', 'school must be on the list');
+select pg_temp.fails($$select request_assembly('$$ || :'spk' || $$', 'Tempe High School', '$$ || :'aday' || $$', '21:00', 400, '', '')$$, 'between 7:00', 'school-hours start time');
+select request_assembly(:'spk', 'Tempe High School', :'aday', '09:30', 450, '9-12', 'Gym') as asm \gset
+select pg_temp.fails($$select request_assembly('$$ || :'spk' || $$', 'Tempe High School', '$$ || :'aday' || $$', '13:00', 100, '', '')$$, 'already has', 'one assembly per school per day');
+select pg_temp.fails($$select decide_assembly((select id from assembly_requests where code = '$$ || :'asm' || $$'), 'Confirmed', '')$$, 'Only ClassTix admins', 'district cannot confirm');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select pg_temp.ok((select count(*) from outbox where kind = 'assembly') = 1, 'admins told about the assembly request');
+select pg_temp.fails($$select decide_assembly((select id from assembly_requests where code = '$$ || :'asm' || $$'), 'Declined', ' ')$$, 'reason', 'decline needs a reason');
+select decide_assembly((select id from assembly_requests where code = :'asm'), 'Confirmed', 'Meet at the front office at 9:00.');
+select pg_temp.ok((select status from assembly_requests where code = :'asm') = 'Confirmed', 'assembly confirmed');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select pg_temp.ok((select count(*) from assembly_requests) = 1, 'district sees its assembly');
+select cancel_assembly((select id from assembly_requests where code = :'asm'));
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select pg_temp.ok((select status from assembly_requests where code = :'asm') = 'Cancelled', 'district can cancel');
+
 -- deactivate district
 select set_district_status(:'mesa', 'Inactive');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
