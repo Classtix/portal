@@ -2,6 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { createClient } from "./supabase/server";
 import type { Profile } from "./types";
+import { homeFor } from "./roles";
 
 /** The signed-in person's profile, or a redirect to sign-in. */
 export async function getMe(): Promise<{ profile: Profile; supabase: ReturnType<typeof createClient> }> {
@@ -15,12 +16,18 @@ export async function getMe(): Promise<{ profile: Profile; supabase: ReturnType<
 
 export async function requireAdmin() {
   const me = await getMe();
-  if (me.profile.role !== "admin") redirect("/district");
+  if (me.profile.role !== "admin") redirect(homeFor(me.profile.role));
   return me;
 }
 
 export async function requireDistrict() {
   const me = await getMe();
-  if (me.profile.role !== "district") redirect("/admin");
+  if (me.profile.role !== "district") redirect(homeFor(me.profile.role));
+  return me;
+}
+
+export async function requireSponsor() {
+  const me = await getMe();
+  if (me.profile.role !== "sponsor") redirect(homeFor(me.profile.role));
   return me;
 }

@@ -178,6 +178,30 @@ select cancel_assembly((select id from assembly_requests where code = :'asm'));
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select pg_temp.ok((select status from assembly_requests where code = :'asm') = 'Cancelled', 'district can cancel');
 
+-- sponsor accounts
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000d', 'alicia@asu.example');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select pg_temp.fails($$select admin_set_profile('00000000-0000-0000-0000-00000000000d', 'Alicia', 'alicia@asu.example', 'sponsor', null, 'Invited', '')$$, 'partner', 'sponsor needs a partner');
+select admin_set_profile('00000000-0000-0000-0000-00000000000d', 'Alicia', 'alicia@asu.example', 'sponsor', null, 'Invited', 'ASU Athletics');
+select id as sdb from events where partner = 'ASU Athletics' and status = 'Published' limit 1 \gset
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select submit_request((select id from ticket_types where event_id = :'sdb' limit 1), 2, 'Tempe High School', 'Attendance') as sreq \gset
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select approve_request((select id from requests where code = :'sreq'));
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+select pg_temp.ok(not is_sponsor(), 'invited sponsor has no access until first sign-in');
+select touch_login();
+select pg_temp.ok(is_sponsor() and my_district() is null and not is_admin(), 'sponsor role recognised');
+select pg_temp.ok((select count(*) from events) > 0 and (select count(*) from events where status <> 'Published') = 0, 'sponsor browses published catalog only');
+select pg_temp.ok((select count(*) from requests) + (select count(*) from districts) + (select count(*) from ledger) + (select count(*) from profiles where id <> auth.uid()) = 0, 'sponsor cannot read requests, districts, balances or users');
+select pg_temp.fails($$select submit_request((select id from ticket_types limit 1), 2, 'Tempe High School', 'Attendance')$$, 'linked to an active district', 'sponsor cannot request');
+select pg_temp.ok((select approved from sponsor_impact() where event_id = :'sdb') = 2, 'impact counts approved awards for own listings');
+select pg_temp.ok((select districts from sponsor_impact() where event_id = :'sdb') = array['Tempe Union HSD'], 'impact names districts reached');
+select pg_temp.ok((select (merits->>'Attendance')::int from sponsor_impact() where event_id = :'sdb') = 2, 'impact by merit type');
+select pg_temp.ok((select count(*) from sponsor_impact() where title ilike '%Suns%') = 0, 'only own partner listings');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+
 -- deactivate district
 select set_district_status(:'mesa', 'Inactive');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');

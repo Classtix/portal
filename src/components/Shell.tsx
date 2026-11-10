@@ -12,7 +12,7 @@ export default function Shell({ me, districtName, nav, children }: {
         <div className="brand"><Logo /><div><b>ClassTix</b><small>District Rewards Portal</small></div></div>
         <div className="me">
           <b>{me.name || me.email}</b>
-          <span>{me.role === "admin" ? "ClassTix Admin" : districtName || "District Admin"}</span>
+          <span>{me.role === "admin" ? "ClassTix Admin" : me.role === "sponsor" ? `${me.partner || "Partner"} · Sponsor` : districtName || "District Admin"}</span>
         </div>
         <NavLinks items={nav} />
         <div className="railfoot" style={{ display: "flex" }}>

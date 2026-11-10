@@ -1,6 +1,6 @@
-export type Role = "admin" | "district";
+export type Role = "admin" | "district" | "sponsor";
 export type Profile = {
-  id: string; name: string; email: string; role: Role; district_id: string | null;
+  id: string; name: string; email: string; role: Role; district_id: string | null; partner?: string;
   status: "Invited" | "Active" | "Deactivated"; invited_at: string; last_login: string | null;
 };
 export type District = {

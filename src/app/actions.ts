@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deliverOutbox } from "@/lib/email";
 import type { ActionState } from "@/lib/types";
+import { homeFor } from "@/lib/roles";
 
 const SITE = () => (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 const s = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -51,7 +52,7 @@ export async function signIn(_: ActionState, fd: FormData): Promise<ActionState>
     return fail("This account doesn't have access to the portal. Contact ClassTix.");
   }
   await supabase.rpc("touch_login");
-  redirect(me.role === "admin" ? "/admin" : "/district");
+  redirect(homeFor(me.role));
 }
 
 export async function signOut() {
@@ -99,7 +100,7 @@ export async function setPassword(_: ActionState, fd: FormData): Promise<ActionS
   await supabase.rpc("touch_login");
   const { data: { user } } = await supabase.auth.getUser();
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user?.id ?? "").maybeSingle();
-  redirect(me?.role === "admin" ? "/admin" : "/district");
+  redirect(homeFor(me?.role));
 }
 
 /* ------------------------------------------------------------------ district */
@@ -299,7 +300,7 @@ async function sendInviteLink(email: string, name: string, role: string, distric
   const link = `${SITE()}/auth/confirm?token_hash=${data.properties.hashed_token}&type=${type}`;
   await admin.from("outbox").insert({
     to_email: email, to_name: name, kind: "invite", subject: "Your invite to the ClassTix portal",
-    body: `Hi ${name},\n\nYou've been invited to the ClassTix District Rewards Portal as a ${role === "admin" ? "ClassTix Admin" : "District Admin"}${districtName ? " for " + districtName : ""}.\n\nOpen this link to set your password and sign in. It works once; if it has expired, use \"Forgot your password?\" on the sign-in page to get a new one:\n\n${link}\n\nAfter that, sign in any time at ${SITE()}\n\nThe ClassTix team`,
+    body: `Hi ${name},\n\nYou've been invited to the ClassTix District Rewards Portal as ${role === "admin" ? "a ClassTix Admin" : role === "sponsor" ? "a Sponsor" : "a District Admin"}${districtName ? " for " + districtName : ""}.${role === "sponsor" ? "\n\nAs a sponsor you can browse every reward districts can request and see how your donated rewards are being used. You can't place requests." : ""}\n\nOpen this link to set your password and sign in. It works once; if it has expired, use \"Forgot your password?\" on the sign-in page to get a new one:\n\n${link}\n\nAfter that, sign in any time at ${SITE()}\n\nThe ClassTix team`,
   });
   return data.user.id;
 }
@@ -307,17 +308,19 @@ async function sendInviteLink(email: string, name: string, role: string, distric
 export async function inviteUser(_: ActionState, fd: FormData) {
   return guard(async () => {
     await adminOnly();
-    const name = s(fd, "name"), email = s(fd, "email").toLowerCase(), role = s(fd, "role") === "admin" ? "admin" : "district";
+    const name = s(fd, "name"), email = s(fd, "email").toLowerCase(), role = ["admin", "sponsor"].includes(s(fd, "role")) ? s(fd, "role") : "district";
+    const partner = role === "sponsor" ? s(fd, "partner") : "";
     const did = role === "district" ? s(fd, "district_id") : null;
     if (!name) throw new Error("Add their name.");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Enter a valid email address.");
     if (role === "district" && !did) throw new Error("Choose their district.");
+    if (role === "sponsor" && !partner) throw new Error("Choose which partner they sponsor.");
     const supabase = createClient();
     const { data: existing } = await supabase.from("profiles").select("id,status").eq("email", email).maybeSingle();
     if (existing && existing.status !== "Invited") throw new Error("Someone with that email already has access.");
     const { data: d } = did ? await supabase.from("districts").select("name").eq("id", did).maybeSingle() : { data: null };
-    const uid = await sendInviteLink(email, name, role, d?.name ?? null);
-    await rpc("admin_set_profile", { p_user: uid, p_name: name, p_email: email, p_role: role, p_district: did, p_status: "Invited" });
+    const uid = await sendInviteLink(email, name, role, role === "sponsor" ? partner : d?.name ?? null);
+    await rpc("admin_set_profile", { p_user: uid, p_name: name, p_email: email, p_role: role, p_district: did, p_status: "Invited", ...(role === "sponsor" ? { p_partner: partner } : {}) });
     return `Invite sent to ${email}.`;
   });
 }
@@ -328,8 +331,8 @@ export async function resendInvite(_: ActionState, fd: FormData) {
     const supabase = createClient();
     const { data: p } = await supabase.from("profiles").select("*, districts(name)").eq("id", s(fd, "id")).maybeSingle();
     if (!p) throw new Error("User not found.");
-    await sendInviteLink(p.email, p.name, p.role, (p as { districts?: { name: string } | null }).districts?.name ?? null);
-    await rpc("admin_set_profile", { p_user: p.id, p_name: p.name, p_email: p.email, p_role: p.role, p_district: p.district_id, p_status: "Invited" });
+    await sendInviteLink(p.email, p.name, p.role, p.role === "sponsor" ? p.partner : (p as { districts?: { name: string } | null }).districts?.name ?? null);
+    await rpc("admin_set_profile", { p_user: p.id, p_name: p.name, p_email: p.email, p_role: p.role, p_district: p.district_id, p_status: "Invited", ...(p.role === "sponsor" ? { p_partner: p.partner } : {}) });
     return `Invite sent again to ${p.email}.`;
   });
 }
