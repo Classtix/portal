@@ -49,6 +49,7 @@ You'll create three free accounts and add three DNS records. Do the steps in ord
    8. `0008_retail_single_qty.sql`, which lets Restaurant & Retail requests be any number of cards.
    9. `0009_assembly_speakers.sql`, which adds Assembly Giveaway speaker requests (ASU Athletics, Suns, Cardinals, Diamondbacks).
    10. `0010_sponsors.sql`, which adds browse-only Sponsor accounts with an impact page.
+   11. `0011_donated_allowances.sql`, which adds donated-ticket allowances (e.g. 10 ASU Athletics tickets for Osborn): while a district has one it can request only that partner, with no points, until the tickets run out.
    11. Catalog data in `supabase/data`: `asu-home-games.sql`, then `catalog-update-2026-10.sql` (Suns, Cardinals, concerts and always-available gift cards; removes dated retail drops and the old dining category).
 3. Go to **Authentication → Sign In / Providers → Email**:
    - Turn **off** "Allow new users to sign up". Accounts are invite-only.

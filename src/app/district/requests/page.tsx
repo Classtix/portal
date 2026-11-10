@@ -35,10 +35,10 @@ export default async function MyRequests({ searchParams }: { searchParams: { sta
                   {r.reason && <div className="sub">Reason: {r.reason}</div>}
                   {live && r.approved_qty < r.qty && <div className="sub">{num(r.approved_qty)} of {num(r.qty)} approved</div>}</td>
                 <td>{r.events?.dated ? fDate(r.events.date) : "Anytime"}</td>
-                <td className="n">{num(q)}</td><td className="n">{pts(q * r.points_each)}</td>
+                <td className="n">{num(q)}</td><td className="n">{r.points_each === 0 ? "Donated" : pts(q * r.points_each)}</td>
                 <td><Pill s={r.status} /></td>
                 <td>{r.status === "Pending" && <Pop label="Cancel">
-                  <p style={{ margin: 0 }}>Cancel {r.code}? Your {pts(r.qty * r.points_each)} come back right away.</p>
+                  <p style={{ margin: 0 }}>Cancel {r.code}? {r.points_each === 0 ? "Your donated tickets come back right away." : <>Your {pts(r.qty * r.points_each)} come back right away.</>}</p>
                   <ActionForm action={cancelRequest} hidden={{ id: r.id }} submit="Cancel request" buttonClass="btn danger sm" />
                 </Pop>}</td>
               </tr>);

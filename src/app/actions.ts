@@ -272,6 +272,16 @@ export async function updateDistrict(_: ActionState, fd: FormData) {
     return "Saved. The new monthly points apply at the next reset.";
   });
 }
+export async function setAllowance(_: ActionState, fd: FormData) {
+  return guard(async () => {
+    const remove = s(fd, "remove") === "1";
+    await rpc("set_allowance", {
+      p_district: s(fd, "id"), p_partner: s(fd, "partner"),
+      p_tickets: remove ? null : n(fd, "tickets"), p_note: s(fd, "note"),
+    });
+    return remove ? "Donated tickets removed. The district can request everything again with points." : "Donated tickets saved.";
+  });
+}
 export async function adjustPoints(_: ActionState, fd: FormData) {
   return guard(async () => {
     await rpc("adjust_points", { p_district: s(fd, "id"), p_amount: n(fd, "amount"), p_reason: s(fd, "reason") });

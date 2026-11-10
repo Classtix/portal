@@ -106,7 +106,7 @@ async function Detail({ r, e, d, back }: { r: RequestRow; e: EventRow | null; d:
         <dt>District</dt><dd>{d?.name || "—"}</dd>
         <dt>Balance</dt><dd>{pts(avail as number)} available · {pts(held as number)} on hold</dd>
         <dt>Listing</dt><dd>{e?.title || "Removed"}{e && <div className="sub">{evWhen(e)}{e.venue ? " · " + e.venue : ""}</div>}</dd>
-        <dt>Type</dt><dd>{t?.name || "—"} · {pts(r.points_each)} each</dd>
+        <dt>Type</dt><dd>{t?.name || "—"} · {r.points_each === 0 ? "Donated tickets, no points" : `${pts(r.points_each)} each`}</dd>
         <dt>Requested</dt><dd>{num(r.qty)} · {pts(r.qty * r.points_each)}</dd>
         {(r.status === "Approved" || r.status === "Fulfilled") && <><dt>Approved</dt><dd>{num(r.approved_qty)} · {pts(r.approved_qty * r.points_each)}</dd></>}
         <dt>Remaining</dt><dd>{t ? `${num(left)} of ${num(t.qty)} left` : "—"}</dd>

@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 import { districtContext } from "@/lib/district";
 import { Head, CatPill } from "@/components/ui";
 import RequestForm from "@/components/RequestForm";
-import { num, fDate, fmtTime, evState, evWhen, remaining, sortTypes } from "@/lib/format";
+import { num, fDate, fmtTime, evState, evWhen, remaining, sortTypes, allowedFor } from "@/lib/format";
 import type { EventRow } from "@/lib/types";
 
 export const metadata = { title: "Event" };
 
 export default async function DistrictEvent({ params }: { params: { id: string } }) {
-  const { supabase, district, available } = await districtContext();
+  const { supabase, district, available, allowances } = await districtContext();
   if (!district) return null;
   const { data } = await supabase.from("events").select("*, ticket_types(*)").eq("id", params.id).maybeSingle();
   if (!data) notFound();
@@ -17,6 +17,8 @@ export default async function DistrictEvent({ params }: { params: { id: string }
   const s = evState(e);
   const isCard = /^(giftcard|restaurantcard)-/.test(e.series || "");
   const unit = isCard ? "cards" : e.cat === "retail" ? "awards" : "tickets";
+  const donated = allowances.find((a) => a.partner.toLowerCase() === (e.partner || "").toLowerCase());
+  const allowed = allowedFor(allowances, e.partner);
   const back = e.cat === "retail" ? ["/district/retail", "Restaurant & Retail"] : e.cat === "arts" ? ["/district/arts", "Arts & Culture"] : ["/district/calendar", "Music & Sports Calendar"];
   return (
     <>
@@ -37,8 +39,9 @@ export default async function DistrictEvent({ params }: { params: { id: string }
         </section>
         <section className="panel">
           <h2>Request {unit}</h2>
-          {s !== "Open" ? <p className="banner">{s === "Sold out" ? "This listing is sold out." : s === "Closed" ? "The request deadline has passed." : "This listing isn't open for requests."}</p>
-            : <RequestForm types={e.ticket_types} available={available} max={e.max_per_request} unit={unit} schools={district.schools || []} step={e.cat === "retail" ? 1 : 2} />}
+          {!allowed ? <p className="banner">Right now your district can request {allowances.map((a) => a.partner).join(", ")} only. You can still browse everything else; ask ClassTix if you&apos;d like other rewards opened up.</p>
+            : s !== "Open" ? <p className="banner">{s === "Sold out" ? "This listing is sold out." : s === "Closed" ? "The request deadline has passed." : "This listing isn't open for requests."}</p>
+            : <RequestForm types={e.ticket_types} available={available} max={e.max_per_request} unit={unit} schools={district.schools || []} step={e.cat === "retail" ? 1 : 2} donated={donated} />}
         </section>
       </div>
     </>

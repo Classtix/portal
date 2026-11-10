@@ -202,6 +202,25 @@ select pg_temp.ok((select (merits->>'Attendance')::int from sponsor_impact() whe
 select pg_temp.ok((select count(*) from sponsor_impact() where title ilike '%Suns%') = 0, 'only own partner listings');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 
+-- donated allowances (Mesa gets 10 ASU Athletics tickets)
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select set_allowance(:'mesa', 'ASU Athletics', 10, 'Donated by Access ASU');
+select id as asut from ticket_types where event_id = :'sdb' limit 1 \gset
+select id as zoot from ticket_types where event_id = (select id from events where partner = 'Phoenix Zoo' limit 1) limit 1 \gset
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select available(:'mesa') as mesa_before \gset
+select pg_temp.fails($$select submit_request('$$ || :'zoot' || $$', 2, 'District-wide', 'Grades')$$, 'only', 'allowance district limited to donated partner');
+select submit_request(:'asut', 1, 'District-wide', 'Attendance') as don1 \gset
+select submit_request(:'asut', 4, 'District-wide', 'Attendance') as don2 \gset
+select pg_temp.ok((select remaining from district_allowance_status() where partner = 'ASU Athletics') = 0, 'pairs count toward 10 tickets');
+select pg_temp.fails($$select submit_request('$$ || :'asut' || $$', 1, 'District-wide', 'Attendance')$$, 'donated', 'blocked after 10 tickets');
+select pg_temp.ok(available(:'mesa') = :'mesa_before', 'donated requests cost no points');
+select cancel_request((select id from requests where code = :'don1'));
+select pg_temp.ok((select remaining from district_allowance_status() where partner = 'ASU Athletics') = 2, 'cancelling frees donated tickets');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select approve_request((select id from requests where code = :'don2'), 2);
+select pg_temp.ok((select used from district_allowance_status(:'mesa') where partner = 'ASU Athletics') = 4, 'partial approval frees the rest');
+
 -- deactivate district
 select set_district_status(:'mesa', 'Inactive');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');

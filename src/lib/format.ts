@@ -64,6 +64,14 @@ export function qtyOptions(left: number, max: number | null, step = 2): number[]
   return out;
 }
 
+/** Donated allowances: award counts whose tickets (award × seats) fit in what's left. */
+export function allowanceOptions(ticketsLeft: number, seats: number, left: number, max: number | null): number[] {
+  const cap = Math.min(Math.floor(ticketsLeft / Math.max(seats, 1)), left, max || left);
+  return Array.from({ length: Math.max(cap, 0) }, (_, i) => i + 1);
+}
+export const allowedFor = (al: { partner: string }[], partner: string) =>
+  !al.length || al.some((a) => a.partner.toLowerCase() === (partner || "").toLowerCase());
+
 export const fSize = (b: number | null) => !b ? "" : b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 
 /** "09:30:00" -> "9:30 AM" */

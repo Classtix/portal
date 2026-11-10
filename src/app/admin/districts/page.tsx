@@ -4,9 +4,9 @@ import { Head, Pill, Empty } from "@/components/ui";
 import ActionForm from "@/components/ActionForm";
 import Pop from "@/components/Pop";
 import LedgerTable from "@/components/LedgerTable";
-import { createDistrict, updateDistrict, adjustPoints, setDistrictStatus } from "@/app/actions";
+import { createDistrict, updateDistrict, adjustPoints, setDistrictStatus, setAllowance } from "@/app/actions";
 import { num, pts } from "@/lib/format";
-import type { District, LedgerRow, Profile, RequestRow } from "@/lib/types";
+import type { Allowance, District, LedgerRow, Profile, RequestRow } from "@/lib/types";
 
 export const metadata = { title: "Districts" };
 
@@ -58,11 +58,15 @@ export default async function AdminDistricts({ searchParams }: { searchParams: {
 
 async function Detail({ d, avail, held }: { d: District; avail: number; held: number }) {
   const { supabase } = await requireAdmin();
-  const [{ data: users }, { data: ledger }, { data: reqs }] = await Promise.all([
+  const [{ data: users }, { data: ledger }, { data: reqs }, { data: al }, { data: partners }] = await Promise.all([
     supabase.from("profiles").select("*").eq("district_id", d.id).order("name"),
     supabase.from("ledger").select("*").eq("district_id", d.id).order("at").order("id"),
     supabase.from("requests").select("status").eq("district_id", d.id),
+    supabase.rpc("district_allowance_status", { p_district: d.id }),
+    supabase.from("events").select("partner").neq("partner", ""),
   ]);
+  const allowances = (al || []) as Allowance[];
+  const partnerList = [...new Set((partners || []).map((x) => x.partner as string))].sort();
   const R = (reqs || []) as Pick<RequestRow, "status">[];
   const c = (s: string) => R.filter((r) => r.status === s).length;
   return (
@@ -99,6 +103,35 @@ async function Detail({ d, avail, held }: { d: District; avail: number; held: nu
         {(users || []).length ? <div className="list">{((users || []) as Profile[]).map((u) => (
           <div className="item" key={u.id}><div><div className="t">{u.name}</div><div className="m">{u.email}</div></div><Pill s={u.status} /></div>))}</div>
           : <p className="sub">No District Admins yet. <Link href="/admin/users">Invite one under Users.</Link></p>}
+      </section>
+      <section className="panel">
+        <div className="ph"><h2>Donated tickets</h2>
+          <Pop label="Add donated tickets" className="btn sec sm">
+            <ActionForm action={setAllowance} hidden={{ id: d.id }} submit="Save" resetOnOk>
+              <p className="sub" style={{ margin: 0 }}>While {d.name} has donated tickets, it can request only those partners&apos; listings, with no points used, until the tickets run out.</p>
+              <div className="f"><label htmlFor="al-p">Partner</label><input id="al-p" name="partner" type="text" list="al-partners" required placeholder="ASU Athletics" />
+                <datalist id="al-partners">{partnerList.map((x) => <option key={x} value={x} />)}</datalist></div>
+              <div className="f"><label htmlFor="al-t">Tickets donated</label><input id="al-t" name="tickets" type="number" min={0} step={2} required placeholder="10" /></div>
+              <div className="f"><label htmlFor="al-n">Note the district sees</label><input id="al-n" name="note" type="text" maxLength={120} placeholder="Donated by Access ASU" /></div>
+            </ActionForm>
+          </Pop></div>
+        {allowances.length ? <div className="list">{allowances.map((a) => (
+          <div className="item" key={a.partner}>
+            <div><div className="t">{a.partner}: {a.remaining} of {a.tickets} left</div><div className="m">{a.used} used (pending, approved and sent){a.note ? ` · ${a.note}` : ""}</div></div>
+            <div className="row" style={{ gap: 8 }}>
+              <Pop label="Edit">
+                <ActionForm action={setAllowance} hidden={{ id: d.id, partner: a.partner }} submit="Save">
+                  <div className="f"><label htmlFor={`alt-${a.partner}`}>Tickets donated</label><input id={`alt-${a.partner}`} name="tickets" type="number" min={0} step={2} defaultValue={a.tickets} required /><span className="hint">{a.used} already used. Add more here when the sponsor donates again.</span></div>
+                  <div className="f"><label htmlFor={`aln-${a.partner}`}>Note the district sees</label><input id={`aln-${a.partner}`} name="note" type="text" maxLength={120} defaultValue={a.note} /></div>
+                </ActionForm>
+              </Pop>
+              <Pop label="Remove" className="btn danger sm">
+                <p style={{ margin: 0 }}>Remove {a.partner} donated tickets? {d.name} goes back to requesting everything with points. Requests already made stay as they are.</p>
+                <ActionForm action={setAllowance} hidden={{ id: d.id, partner: a.partner, remove: "1" }} submit="Remove" buttonClass="btn danger" />
+              </Pop>
+            </div>
+          </div>))}</div>
+          : <p className="sub" style={{ margin: 0 }}>None. {d.name} requests with points.</p>}
       </section>
       <section className="panel">
         <div className="ph"><h2>Points</h2><span className="sub">{pts(avail)} available · {pts(held)} on hold</span></div>

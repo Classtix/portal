@@ -38,3 +38,6 @@ export type AssemblyRequest = {
   id: string; code: string; district_id: string; speaker_id: string; school: string; date: string; start_time: string;
   audience: number; grades: string; note: string; status: AssemblyStatus; admin_note: string; created_at: string; decided_at: string | null;
 };
+
+/** Donated tickets a sponsor set aside for one district. While a district has any, it can only request those partners' listings. */
+export type Allowance = { partner: string; tickets: number; used: number; remaining: number; note: string };

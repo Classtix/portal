@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { districtContext } from "@/lib/district";
+import AllowanceNotice from "@/components/AllowanceNotice";
 import { Head, Kpi, Pill, Empty } from "@/components/ui";
 import { num, pts, fDate, fShort, mLabel, today } from "@/lib/format";
 import type { RequestRow } from "@/lib/types";
@@ -7,7 +8,7 @@ import type { RequestRow } from "@/lib/types";
 export const metadata = { title: "Dashboard" };
 
 export default async function DistrictDash() {
-  const { supabase, district: d, available, held, settings } = await districtContext();
+  const { supabase, district: d, available, held, settings, allowances } = await districtContext();
   if (!d) return null;
   const k = settings.current_month;
   const { data } = await supabase.from("requests").select("*, events(title, date, dated)").order("created_at", { ascending: false }).limit(200);
@@ -19,6 +20,7 @@ export default async function DistrictDash() {
     <>
       <Head eyebrow={`${d.name} · ${mLabel(k)}`} title="Your rewards this month" sub="Request tickets and gift cards with your monthly points. ClassTix reviews each request and sends them."
         right={<Link className="btn" href="/district/calendar">Browse events</Link>} />
+      <AllowanceNotice allowances={allowances} />
       <div className="kpis">
         <Kpi label="Available" value={pts(available)} small="ready to spend" hot />
         <Kpi label="On hold" value={pts(held)} small={`${R.filter((r) => r.status === "Pending").length} pending requests`} />
@@ -33,7 +35,7 @@ export default async function DistrictDash() {
         </section>
         <section className="panel"><div className="ph"><h2>Recent requests</h2><Link className="link" href="/district/requests">See all</Link></div>
           {R.length ? <div className="list">{R.slice(0, 5).map((r) => (
-            <div className="item" key={r.id}><div><div className="t">{r.events?.title}</div><div className="m">{num(r.qty)} · {pts(r.qty * r.points_each)} · {fShort(r.created_at)}</div></div><Pill s={r.status} /></div>))}</div>
+            <div className="item" key={r.id}><div><div className="t">{r.events?.title}</div><div className="m">{num(r.qty)} · {r.points_each === 0 ? "Donated" : pts(r.qty * r.points_each)} · {fShort(r.created_at)}</div></div><Pill s={r.status} /></div>))}</div>
             : <Empty title="No requests yet"><Link href="/district/calendar">Open the Music &amp; Sports Calendar</Link> to request tickets.</Empty>}
         </section>
       </div>
