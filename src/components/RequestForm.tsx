@@ -13,7 +13,7 @@ function Submit({ disabled }: { disabled: boolean }) {
   return <button className="btn" type="submit" disabled={disabled || pending} style={{ width: "100%", justifyContent: "center" }}>{pending ? "Sending…" : "Submit request"}</button>;
 }
 
-export default function RequestForm({ types, available, max, unit, schools, step = 2, donated }: { types: TicketType[]; available: number; max: number | null; unit: string; schools: string[]; step?: number; donated?: Allowance }) {
+export default function RequestForm({ types, available, max, unit, schools, step = 2, donated, free }: { types: TicketType[]; available: number; max: number | null; unit: string; schools: string[]; step?: number; donated?: Allowance; free?: string }) {
   const first = types.find((t) => t.qty - t.approved > 0) || types[0];
   const [tid, setTid] = useState(first?.id || "");
   const [qty, setQty] = useState("");
@@ -37,16 +37,16 @@ export default function RequestForm({ types, available, max, unit, schools, step
   return (
     <form action={action} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <input type="hidden" name="type_id" value={tid} />
-      <div className="f"><label htmlFor="rt">{unit === "cards" ? "Gift card" : "Ticket type"}</label>
+      <div className="f"><label htmlFor="rt">{unit === "cards" ? "Gift card" : free ? "What you're requesting" : "Ticket type"}</label>
         <select id="rt" value={tid} onChange={(e) => { setTid(e.target.value); setQty(""); }}>
-          {types.map((x) => { const l = x.qty - x.approved; return <option key={x.id} value={x.id} disabled={l <= 0}>{x.name}{donated ? "" : ` · ${x.points} pts`}{l <= 0 ? " (sold out)" : ` · ${l} left`}</option>; })}
+          {types.map((x) => { const l = x.qty - x.approved; return <option key={x.id} value={x.id} disabled={l <= 0}>{x.name}{donated || free ? "" : ` · ${x.points} pts`}{l <= 0 ? " (sold out)" : ` · ${l} left`}</option>; })}
         </select></div>
       <div className="f"><label htmlFor="rq">How many {unit}</label>
         <select id="rq" name="qty" value={q ? String(q) : ""} onChange={(e) => setQty(e.target.value)} required>
           <option value="" disabled>{opts.length ? "Choose an amount" : donated && donated.remaining < seats ? "No donated tickets left" : "None left"}</option>
           {donated ? opts.map((o) => <option key={o} value={o}>{tix(o)}{seats > 1 ? ` (${o} award${o === 1 ? "" : "s"})` : ""}</option>)
           : opts.map((o) => { const short = t ? o * t.points > available : false;
-            return <option key={o} value={o} disabled={short}>{o} · {pts(t ? o * t.points : 0)}{short ? " (not enough points)" : ""}</option>; })}
+            return <option key={o} value={o} disabled={short}>{free ? `${o} ${unit === "students" ? (o === 1 ? "student" : "students") : (o === 1 ? "family" : "families")}` : <>{o} · {pts(t ? o * t.points : 0)}{short ? " (not enough points)" : ""}</>}</option>; })}
         </select></div>
       <fieldset className="f" style={{ border: 0, padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
         <legend className="lab" style={{ padding: 0, marginBottom: 6, fontWeight: 700 }}>Merit awarded for</legend>
@@ -62,7 +62,10 @@ export default function RequestForm({ types, available, max, unit, schools, step
             {MERIT_TYPES.map((x) => <option key={x}>{x}</option>)}
           </select></div>
       </fieldset>
-      {donated ? <div className="calc">
+      {free ? <div className="calc">
+        <span>Cost</span><b className="tot">Free</b>
+        <span>Points</span><b>None used</b>
+      </div> : donated ? <div className="calc">
         <span>Donated tickets left</span><b>{donated.remaining} of {donated.tickets}</b>
         <span>This request</span><b className="tot">{q ? tix(q) : "0 tickets"}</b>
         <span>Left after request</span><b>{Math.max(donated.remaining - q * seats, 0)}</b>
@@ -75,7 +78,9 @@ export default function RequestForm({ types, available, max, unit, schools, step
       {problem && <p className="err">{problem}</p>}
       {state?.error && <p className="msg-err" role="alert">{state.error}</p>}
       <Submit disabled={!t || q < 1 || !!problem} />
-      <p className="sub" style={{ margin: 0 }}>{donated
+      <p className="sub" style={{ margin: 0 }}>{free
+        ? <>Free from {free}. Once ClassTix approves your request, the sign-up link{q > 1 ? "s appear" : " appears"} in My Tickets and we email you.</>
+        : donated
         ? <>{donated.note || `Donated ${donated.partner} tickets`}. No points are used. Pending and approved requests count toward your {donated.tickets}; if ClassTix rejects one or you cancel, those tickets come back.</>
         : "Points are held as soon as you submit. If ClassTix rejects it or you cancel, they come back."}</p>
     </form>

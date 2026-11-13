@@ -32,7 +32,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: { d?:
             <div className="f"><label htmlFor="iu-p">Partner they sponsor (Sponsors only)</label>
               <input id="iu-p" name="partner" type="text" list="iu-partners" maxLength={80} placeholder="ASU Athletics" />
               <datalist id="iu-partners">{partners.map((x) => <option key={x} value={x} />)}</datalist>
-              <span className="hint">Must match the partner name on their listings, so their impact page counts the right rewards.</span></div>
+              <span className="hint">Must match the partner name on their listings, so their impact page counts the right rewards. Separate several with commas: ASU Athletics, Access ASU</span></div>
           </ActionForm>
         </Pop>} />
       <form className="row" action="/admin/users">

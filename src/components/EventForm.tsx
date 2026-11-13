@@ -58,7 +58,7 @@ export default function EventForm({ event, copy }: { event?: EventRow | null; co
             <div className="trow" key={i}>
               <div className="f"><label htmlFor={`tn${i}`}>Type name</label><input type="text" id={`tn${i}`} value={t.name} onChange={setT(i, "name")} maxLength={60} placeholder="Upper level" required /></div>
               <div className="f"><label htmlFor={`tq${i}`}>Quantity</label><input type="number" id={`tq${i}`} min={Math.max(1, t.approved)} value={t.qty} onChange={setT(i, "qty")} required />{t.approved ? <span className="hint">{t.approved} approved</span> : null}</div>
-              <div className="f"><label htmlFor={`tp${i}`}>Points each</label><input type="number" id={`tp${i}`} min={1} value={t.points} onChange={setT(i, "points")} required /></div>
+              <div className="f"><label htmlFor={`tp${i}`}>Points each</label><input type="number" id={`tp${i}`} min={0} value={t.points} onChange={setT(i, "points")} required /></div>
               <div className="f"><label htmlFor={`ts${i}`}>Seats each</label><input type="number" id={`ts${i}`} min={1} value={t.seats} onChange={setT(i, "seats")} /></div>
               <button type="button" className="btn sec sm" disabled={types.length < 2 || t.approved > 0} onClick={() => setTypes(types.filter((_, j) => j !== i))}>Remove</button>
             </div>))}

@@ -11,7 +11,7 @@ export type TicketType = { id: string; event_id: string; name: string; qty: numb
 export type EventRow = {
   id: string; title: string; cat: string; partner: string; description: string; dated: boolean; date: string | null;
   time: string; venue: string; deadline: string | null; max_per_request: number | null;
-  status: "Published" | "Draft" | "Cancelled" | "Archived"; series: string | null; created_at: string; updated_at: string;
+  status: "Published" | "Draft" | "Cancelled" | "Archived"; series: string | null; created_at: string; updated_at: string; districts?: string[];
   ticket_types: TicketType[];
 };
 export type RequestStatus = "Pending" | "Approved" | "Rejected" | "Fulfilled" | "Cancelled";

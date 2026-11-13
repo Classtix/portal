@@ -221,6 +221,26 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select approve_request((select id from requests where code = :'don2'), 2);
 select pg_temp.ok((select used from district_allowance_status(:'mesa') where partner = 'ASU Athletics') = 4, 'partial approval frees the rest');
 
+-- Families · Access ASU: free listing for Mesa only, open even with Mesa's ASU Athletics allowance
+select pg_temp.ok(save_event('{"title":"Free thing","cat":"families","partner":"Access ASU","dated":false,"types":[{"name":"Family access","qty":5,"points":0}]}'::jsonb) is not null, 'admins can make a free (0-point) listing');
+reset role;
+insert into events (title, cat, partner, dated, status, series, districts) values ('Access ASU Summer Camp', 'families', 'Access ASU', false, 'Published', 'families-camp', array[:'mesa'::uuid]) returning id as camp \gset
+insert into ticket_types (event_id, name, qty, points, seats) values (:'camp', 'Camp spot (1 student)', 20, 0, 1) returning id as campt \gset
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select pg_temp.ok((select count(*) from events where id = :'camp') = 0, 'district-only listing hidden from other districts');
+select pg_temp.fails($$select submit_request('$$ || :'campt' || $$', 2, 'Tempe High School', 'Grades')$$, 'open to your district', 'other districts cannot request it');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select available(:'mesa') as mesa_fam \gset
+select pg_temp.ok((select count(*) from events where id = :'camp') = 1, 'listed district sees it');
+select submit_request(:'campt', 3, 'District-wide', 'Attendance') as campreq \gset
+select pg_temp.ok(available(:'mesa') = :'mesa_fam' and (select points_each from requests where code = :'campreq') = 0, 'free request: any count, no points, allowed alongside donated tickets');
+select pg_temp.ok((select used from district_allowance_status() where partner = 'ASU Athletics') = 4, 'free request does not use donated ASU tickets');
+reset role;
+update profiles set partner = 'ASU Athletics, Access ASU' where id = '00000000-0000-0000-0000-00000000000d';
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+select pg_temp.ok((select requested from sponsor_impact() where event_id = :'camp') = 3 and exists (select 1 from sponsor_impact() where event_id = :'sdb'), 'sponsor with two partners sees both in impact');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+
 -- deactivate district
 select set_district_status(:'mesa', 'Inactive');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');

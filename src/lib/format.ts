@@ -1,7 +1,7 @@
 import type { EventRow, TicketType } from "./types";
 
 export const CATS: Record<string, string> = {
-  sports: "Sports", music: "Music", arts: "Arts & Culture", retail: "Restaurant & Retail", other: "Other",
+  sports: "Sports", music: "Music", arts: "Arts & Culture", retail: "Restaurant & Retail", families: "Families", other: "Other",
 };
 export const RATE_LABEL = "$2 per student";
 /** Monthly points for a district: $2 per student, all of it as points at $2 each — 1 point per student. */
@@ -69,6 +69,11 @@ export function allowanceOptions(ticketsLeft: number, seats: number, left: numbe
   const cap = Math.min(Math.floor(ticketsLeft / Math.max(seats, 1)), left, max || left);
   return Array.from({ length: Math.max(cap, 0) }, (_, i) => i + 1);
 }
+/** Every ticket type is free (0 points), e.g. Families · Access ASU. */
+export const isFree = (e: { ticket_types: { points: number }[] }) => e.ticket_types.length > 0 && e.ticket_types.every((t) => t.points === 0);
+/** Does a listing partner belong to a sponsor account (partner may be a comma-separated list)? */
+export const partnerOf = (account: string, partner: string) =>
+  (account || "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean).includes((partner || "").trim().toLowerCase());
 export const allowedFor = (al: { partner: string }[], partner: string) =>
   !al.length || al.some((a) => a.partner.toLowerCase() === (partner || "").toLowerCase());
 

@@ -3,13 +3,17 @@ import { requireDistrict } from "@/lib/session";
 
 export default async function DistrictLayout({ children }: { children: React.ReactNode }) {
   const { profile, supabase } = await requireDistrict();
-  const { data: d } = await supabase.from("districts").select("name").eq("id", profile.district_id!).maybeSingle();
+  const [{ data: d }, { count: fam }] = await Promise.all([
+    supabase.from("districts").select("name").eq("id", profile.district_id!).maybeSingle(),
+    supabase.from("events").select("id", { count: "exact", head: true }).eq("cat", "families").eq("status", "Published"),
+  ]);
   return (
     <Shell me={profile} districtName={d?.name} nav={[
       { href: "/district", label: "Dashboard", exact: true },
       { href: "/district/calendar", label: "Music & Sports Calendar" },
       { href: "/district/retail", label: "Restaurant & Retail" },
       { href: "/district/arts", label: "Arts & Culture" },
+      ...(fam ? [{ href: "/district/families", label: "Families · Access ASU" }] : []),
       { href: "/district/requests", label: "My Requests" },
       { href: "/district/tickets", label: "My Tickets" },
       { href: "/district/assemblies", label: "Assembly Giveaway" },

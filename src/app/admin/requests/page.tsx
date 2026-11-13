@@ -106,7 +106,7 @@ async function Detail({ r, e, d, back }: { r: RequestRow; e: EventRow | null; d:
         <dt>District</dt><dd>{d?.name || "—"}</dd>
         <dt>Balance</dt><dd>{pts(avail as number)} available · {pts(held as number)} on hold</dd>
         <dt>Listing</dt><dd>{e?.title || "Removed"}{e && <div className="sub">{evWhen(e)}{e.venue ? " · " + e.venue : ""}</div>}</dd>
-        <dt>Type</dt><dd>{t?.name || "—"} · {r.points_each === 0 ? "Donated tickets, no points" : `${pts(r.points_each)} each`}</dd>
+        <dt>Type</dt><dd>{t?.name || "—"} · {r.points_each === 0 ? (e?.cat === "families" ? `Free from ${e.partner || "the sponsor"}` : "Donated tickets, no points") : `${pts(r.points_each)} each`}</dd>
         <dt>Requested</dt><dd>{num(r.qty)} · {pts(r.qty * r.points_each)}</dd>
         {(r.status === "Approved" || r.status === "Fulfilled") && <><dt>Approved</dt><dd>{num(r.approved_qty)} · {pts(r.approved_qty * r.points_each)}</dd></>}
         <dt>Remaining</dt><dd>{t ? `${num(left)} of ${num(t.qty)} left` : "—"}</dd>
@@ -148,12 +148,20 @@ async function Detail({ r, e, d, back }: { r: RequestRow; e: EventRow | null; d:
             </div>
             <ActionForm action={removeTicket} hidden={{ id: x.id }} submit="Remove" buttonClass="btn ghost sm" pendingLabel="Removing…" inlineMsg />
           </div>))}</div> : <p className="sub" style={{ marginTop: 0 }}>Nothing attached yet.</p>}
+        {e?.cat === "families" ? <>
+          <ActionForm action={addTicketLink} hidden={{ id: r.id }} submit="Add sign-up link" buttonClass="btn sec sm" resetOnOk>
+            <div className="f"><label htmlFor="tu">Sign-up link</label><input id="tu" name="url" type="url" required placeholder="https://" /><span className="hint">The link {e.partner || "the sponsor"} gave you. It shows in the district&apos;s My Tickets.</span></div>
+            <div className="f"><label htmlFor="tlb">Label <span className="sub">(optional)</span></label><input id="tlb" name="label" type="text" maxLength={120} placeholder={`${e.title} sign-up`} /></div>
+          </ActionForm>
+          <details style={{ marginTop: 12 }}><summary className="link" style={{ cursor: "pointer" }}>Or upload a file (flyer, form)</summary><TicketUploader requestId={r.id} /></details>
+        </> : <>
         <TicketUploader requestId={r.id} />
         <details style={{ marginTop: 12 }}><summary className="link" style={{ cursor: "pointer" }}>Or add a link (Ticketmaster transfer, e-gift card)</summary>
           <ActionForm action={addTicketLink} hidden={{ id: r.id }} submit="Add link" buttonClass="btn sec sm" resetOnOk>
             <div className="f"><label htmlFor="tu">Link</label><input id="tu" name="url" type="url" required placeholder="https://" /></div>
             <div className="f"><label htmlFor="tlb">Label <span className="sub">(optional)</span></label><input id="tlb" name="label" type="text" maxLength={120} placeholder="Ticketmaster transfer" /></div>
           </ActionForm></details>
+        </>}
       </div>}
       {r.status === "Approved" && <>
         <ActionForm action={fulfilRequest} hidden={{ id: r.id, back }} submit={D.length ? "Mark fulfilled and email the district" : "Mark fulfilled"} buttonClass="btn blue" pendingLabel="Saving…" />
